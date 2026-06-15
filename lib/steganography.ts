@@ -1,4 +1,15 @@
-// Zero-width character steganography
+import { encryptMessage, decryptMessage, EncryptionError } from "@/lib/encryption";
+import pako from "pako";
+
+export class SteganographyError extends Error {
+  name = "SteganographyError";
+}
+export class EncodeError extends SteganographyError {
+  name = "EncodeError";
+}
+export class DecodeError extends SteganographyError {
+  name = "DecodeError";
+}
 
 export const ZW_CHARS = [
   { code: "\u200B", label: "U+200B ZERO WIDTH SPACE" },
@@ -13,55 +24,129 @@ export const ZW_CHARS = [
   { code: "\uFEFF", label: "U+FEFF ZERO WIDTH NO-BREAK SPACE" },
 ] as const;
 
-// Default characters: first three (bit0, bit1, delimiter)
 export const DEFAULT_SELECTED = ["\u200B", "\u200C", "\u200D"];
 
-// Converts a UTF-8 string to a binary string (e.g. "A" → "01000001")
-function toBinary(text: string): string {
-  return Array.from(new TextEncoder().encode(text))
-    .map((b) => b.toString(2).padStart(8, "0"))
-    .join("");
+function textToUint8(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
 }
 
-// Converts a binary string back to a UTF-8 string
-function fromBinary(bits: string): string {
+function uint8ToText(data: Uint8Array): string {
+  return new TextDecoder().decode(data);
+}
+
+function toBits(data: Uint8Array): Uint8Array {
+  const bits = new Uint8Array(data.length * 8);
+  for (let i = 0; i < data.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      bits[i * 8 + j] = (data[i] >> (7 - j)) & 1;
+    }
+  }
+  return bits;
+}
+
+function fromBits(bits: Uint8Array): Uint8Array {
   const bytes: number[] = [];
   for (let i = 0; i + 8 <= bits.length; i += 8) {
-    bytes.push(parseInt(bits.slice(i, i + 8), 2));
+    let byte = 0;
+    for (let j = 0; j < 8; j++) {
+      byte = (byte << 1) | bits[i + j];
+    }
+    bytes.push(byte);
   }
-  return new TextDecoder().decode(new Uint8Array(bytes));
+  return new Uint8Array(bytes);
 }
 
-// Hides a secret message inside cover text using the provided zero-width chars.
-// chars[0] = bit 0, chars[1] = bit 1, chars[2] = end delimiter
-export function encodeMessage(coverText: string, secret: string, chars = DEFAULT_SELECTED): string {
-  if (!coverText.trim()) throw new Error("Cover text cannot be empty.");
-  if (!secret) throw new Error("Secret message cannot be empty.");
-  if (chars.length < 3) throw new Error("At least 3 zero-width characters must be selected.");
+function packSecret(data: Uint8Array): Uint8Array {
+  const compressed = pako.deflateRaw(data);
+  const payload = compressed.length < data.length ? compressed : data;
+  const flag = compressed.length < data.length ? 1 : 0;
+  const result = new Uint8Array(1 + payload.length);
+  result[0] = flag;
+  result.set(payload, 1);
+  return result;
+}
+
+function unpackSecret(packed: Uint8Array): Uint8Array {
+  const flag = packed[0];
+  const data = packed.slice(1);
+  if (flag === 1) {
+    return pako.inflateRaw(data);
+  }
+  return data;
+}
+
+export async function prepareSecret(
+  secret: string | Uint8Array,
+  passphrase?: string,
+): Promise<Uint8Array> {
+  const bytes = typeof secret === "string" ? textToUint8(secret) : secret;
+  const packed = packSecret(bytes);
+  if (passphrase) {
+    return encryptMessage(packed, passphrase);
+  }
+  return packed;
+}
+
+export async function extractSecret(
+  data: Uint8Array,
+  passphrase?: string,
+): Promise<string> {
+  let bytes = data;
+  if (passphrase) {
+    try {
+      bytes = await decryptMessage(bytes, passphrase);
+    } catch (e) {
+      if (e instanceof EncryptionError) throw new DecodeError(e.message);
+      throw new DecodeError("Failed to decrypt. Wrong passphrase?");
+    }
+  }
+  const decompressed = unpackSecret(bytes);
+  return uint8ToText(decompressed);
+}
+
+export async function encodeMessage(
+  coverText: string,
+  secret: string | Uint8Array,
+  chars = DEFAULT_SELECTED,
+  passphrase?: string,
+): Promise<string> {
+  if (!coverText.trim()) throw new EncodeError("Cover text cannot be empty.");
+  if (!secret || (typeof secret === "string" && !secret)) throw new EncodeError("Secret message cannot be empty.");
+  if (chars.length < 3) throw new EncodeError("At least 3 zero-width characters must be selected.");
 
   const [ZW0, ZW1, ZWD] = chars;
-  const bits = toBinary(secret);
-  const hidden = bits.split("").map((b) => (b === "0" ? ZW0 : ZW1)).join("") + ZWD;
+  const payload = await prepareSecret(secret, passphrase);
+  const bits = toBits(payload);
+
+  let hidden = "";
+  for (let i = 0; i < bits.length; i++) {
+    hidden += bits[i] === 0 ? ZW0 : ZW1;
+  }
+  hidden += ZWD;
 
   const firstSpace = coverText.search(/\s/);
   if (firstSpace === -1) return coverText + hidden;
   return coverText.slice(0, firstSpace) + hidden + coverText.slice(firstSpace);
 }
 
-// Extracts the hidden message from stego text. Tries all known zero-width chars as potential delimiters.
-export function decodeMessage(stegoText: string, chars = DEFAULT_SELECTED): string {
-  if (chars.length < 3) throw new Error("At least 3 zero-width characters must be selected.");
+export async function decodeMessage(
+  stegoText: string,
+  chars = DEFAULT_SELECTED,
+  passphrase?: string,
+): Promise<string> {
+  if (chars.length < 3) throw new DecodeError("At least 3 zero-width characters must be selected.");
 
   const [ZW0, ZW1, ZWD] = chars;
   const delimIdx = stegoText.indexOf(ZWD);
-  if (delimIdx === -1) throw new Error("No hidden message found.");
+  if (delimIdx === -1) throw new DecodeError("No hidden message found.");
 
-  let bits = "";
+  const bits: number[] = [];
   for (const ch of stegoText.slice(0, delimIdx)) {
-    if (ch === ZW0) bits += "0";
-    else if (ch === ZW1) bits += "1";
+    if (ch === ZW0) bits.push(0);
+    else if (ch === ZW1) bits.push(1);
   }
 
-  if (!bits) throw new Error("No hidden message found.");
-  return fromBinary(bits);
+  if (bits.length === 0) throw new DecodeError("No hidden message found.");
+  const data = fromBits(new Uint8Array(bits));
+  return extractSecret(data, passphrase);
 }
