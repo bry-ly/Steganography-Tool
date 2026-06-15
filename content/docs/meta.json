@@ -3,11 +3,7 @@
   "pages": [
     "index",
     "getting-started",
-    "---Guides---",
-    "text-steganography",
-    "image-steganography",
-    "encryption",
-    "---Reference---",
-    "api-reference"
+    "guides",
+    "reference"
   ]
 }
