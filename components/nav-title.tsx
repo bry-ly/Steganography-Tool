@@ -10,12 +10,12 @@ export function NavTitle(props: ComponentProps<"a">) {
       <Image
         src="/logo/Logo.png"
         alt="Logo"
-        width={20}
-        height={20}
+        width={50}
+        height={50}
         className="rounded"
         priority
       />
-      <span>Steganography Tool</span>
+      <span>Stegnohide</span>
     </Link>
   );
 }

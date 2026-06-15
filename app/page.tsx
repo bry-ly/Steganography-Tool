@@ -207,7 +207,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <header className="px-6 pt-10 pb-4 max-w-2xl mx-auto w-full">
         <div className="flex items-center justify-between mb-1">
-          <Logo />
+          <Logo size={50} />
           <div className="flex items-center gap-2">
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Docs
