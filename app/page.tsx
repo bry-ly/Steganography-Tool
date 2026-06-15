@@ -220,7 +220,7 @@ export default function Home() {
 
       <main className="flex-1 px-6 py-6 max-w-2xl mx-auto w-full space-y-6">
         <Tabs defaultValue="encode-text" onValueChange={() => { setEncodeError(""); setDecodeError(""); }}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 mx-auto">
             <TabsTrigger value="encode-text" className="gap-1.5">
               <LockKeyIcon size={14} /> Encode
             </TabsTrigger>
