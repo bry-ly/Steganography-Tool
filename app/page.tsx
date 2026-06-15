@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 import { ZWCharSelector } from "@/components/zw-char-selector";
 import {
   encodeMessage,
@@ -206,10 +207,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <header className="px-6 pt-10 pb-4 max-w-2xl mx-auto w-full">
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <LockKeyIcon size={22} weight="duotone" />
-            <h1 className="text-xl font-semibold tracking-tight">Steganography Tool</h1>
-          </div>
+          <Logo />
           <div className="flex items-center gap-2">
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Docs
