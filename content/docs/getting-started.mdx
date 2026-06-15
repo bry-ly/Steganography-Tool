@@ -10,19 +10,32 @@ description: Install and run the Steganography Tool locally.
 
 ## Installation
 
+<Steps>
+<Step>
+### Clone the repository
+
 ```bash
 git clone https://github.com/your-username/steganography-tool.git
 cd steganography-tool
+```
+</Step>
+<Step>
+### Install dependencies
+
+```bash
 pnpm install
 ```
-
-## Development
+</Step>
+<Step>
+### Start the dev server
 
 ```bash
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+</Step>
+</Steps>
 
 ## Production Build
 
@@ -37,23 +50,37 @@ pnpm start
 pnpm test
 ```
 
+To run tests in watch mode:
+
+```bash
+pnpm test:watch
+```
+
 ## Project Structure
 
-```
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx          # Root layout with ThemeProvider
-│   ├── page.tsx            # Main UI (Encode, Decode, Image Stego tabs)
-│   └── docs/               # Documentation pages (Fumadocs)
-├── components/             # React components
-│   ├── theme-toggle.tsx    # Dark/light mode toggle
-│   ├── zw-char-selector.tsx # Zero-width character selector
-│   └── ui/                 # shadcn/ui components
-├── lib/                    # Core libraries
-│   ├── encryption.ts       # AES-256-GCM + PBKDF2 encryption
-│   ├── steganography.ts    # Zero-width character steganography engine
-│   ├── image-steganography.ts # LSB image steganography
-│   └── utils.ts            # Utility functions
-├── tests/                  # Vitest test files
-├── content/docs/           # Documentation MDX files
-└── source.config.ts        # Fumadocs MDX configuration
+<Files>
+  <Folder name="app" defaultOpen>
+    <File name="layout.tsx" />
+    <File name="page.tsx" />
+    <Folder name="docs">
+      <File name="layout.tsx" />
+      <File name="[[...slug]]/page.tsx" />
+    </Folder>
+  </Folder>
+  <Folder name="components">
+    <File name="theme-toggle.tsx" />
+    <File name="zw-char-selector.tsx" />
+    <Folder name="ui" />
+  </Folder>
+  <Folder name="lib">
+    <File name="encryption.ts" />
+    <File name="steganography.ts" />
+    <File name="image-steganography.ts" />
+    <File name="utils.ts" />
+  </Folder>
+  <Folder name="content/docs">
+    <File name="meta.json" />
+    <File name="index.mdx" />
+  </Folder>
+</Files>
 ```
