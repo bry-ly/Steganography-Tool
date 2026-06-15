@@ -1,3 +1,13 @@
 {
-  "pages": ["index", "getting-started", "text-steganography", "image-steganography", "encryption", "api-reference"]
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "---Guides---",
+    "text-steganography",
+    "image-steganography",
+    "encryption",
+    "---Reference---",
+    "api-reference"
+  ]
 }
