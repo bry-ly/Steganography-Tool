@@ -5,12 +5,6 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: "Steganography Tool",
     },
-    links: [
-      {
-        text: "GitHub",
-        url: "https://github.com/your-username/steganography-tool",
-        external: true,
-      },
-    ],
+    githubUrl: "https://github.com/your-username/steganography-tool",
   };
 }
