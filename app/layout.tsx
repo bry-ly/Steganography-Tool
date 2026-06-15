@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -10,7 +11,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "Steganography Tool",
-  description: "Hide secret messages inside plain text using zero-width characters.",
+  description: "Hide secret messages inside plain text or images using steganography.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,10 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={cn("h-full antialiased", geistSans.variable, geistMono.variable, jetbrainsMono.variable)}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-mono">
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
