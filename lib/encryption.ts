@@ -5,6 +5,10 @@ export class EncryptionError extends Error {
   }
 }
 
+function toBufferSource(data: Uint8Array): BufferSource {
+  return data as unknown as BufferSource;
+}
+
 async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -15,7 +19,7 @@ async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKe
     ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+    { name: "PBKDF2", salt: toBufferSource(salt), iterations: 100_000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
@@ -27,7 +31,7 @@ export async function encryptMessage(plaintext: Uint8Array, passphrase: string):
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(passphrase, salt);
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: toBufferSource(iv) }, key, toBufferSource(plaintext));
   const result = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
   result.set(salt, 0);
   result.set(iv, salt.length);
@@ -42,7 +46,7 @@ export async function decryptMessage(ciphertext: Uint8Array, passphrase: string)
   const data = ciphertext.slice(28);
   const key = await deriveKey(passphrase, salt);
   try {
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: toBufferSource(iv) }, key, toBufferSource(data));
     return new Uint8Array(decrypted);
   } catch {
     throw new EncryptionError();
