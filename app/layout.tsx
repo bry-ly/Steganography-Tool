@@ -11,7 +11,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Steganography Tool",
+  title: "SteganoHide Tool",
   description: "Hide secret messages inside plain text or images using steganography.",
   icons: {
     icon: "/logo/Logo.png",
@@ -20,14 +20,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={cn("h-full antialiased", geistSans.variable, geistMono.variable, jetbrainsMono.variable)}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={cn("h-full antialiased", geistSans.variable, geistMono.variable, jetbrainsMono.variable)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-mono">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <RootProvider>
+          <RootProvider
+            theme={{
+              enabled: false,
+            }}
+          >
             {children}
             <Toaster />
           </RootProvider>
