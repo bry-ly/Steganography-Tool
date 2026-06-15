@@ -1,0 +1,75 @@
+---
+title: Image Steganography
+description: Hide messages in image pixels using LSB steganography.
+---
+
+## How It Works
+
+Image steganography hides secret messages by modifying the **least significant bits (LSB)** of pixel color channels. This produces visually identical images with hidden data embedded in the pixel values.
+
+### The Algorithm
+
+1. **Read** the image pixel data (RGBA channels, skipping alpha)
+2. **Convert** the secret payload to bits
+3. **Prepend** a 32-bit length header (little-endian) so the decoder knows exactly how many bits to extract
+4. **Embed** each bit into the LSB of successive R, G, B channels
+5. **Output** the modified image as a PNG file
+
+### Bits Per Channel (bpc)
+
+| Mode | Capacity (1024×1024) | Visual Impact |
+|------|---------------------|---------------|
+| 1 bpc | ~393,000 bytes | Imperceptible |
+| 2 bpc | ~786,000 bytes | Slight noise on close inspection |
+
+- **1 bpc** — Uses only the least significant bit of each channel. Higher quality, lower capacity.
+- **2 bpc** — Uses the two least significant bits. More capacity, slight visual degradation possible.
+
+### Capacity Formula
+
+```
+maxBytes = floor((width × height × 3 × bpc - 32) / 8)
+```
+
+The `-32` accounts for the 32-bit length header.
+
+### Processing Pipeline
+
+When a passphrase is provided:
+
+```
+Secret Text → Compress → Encrypt → LSB Encode → PNG Export
+```
+
+Without a passphrase:
+
+```
+Secret Text → Compress → LSB Encode → PNG Export
+```
+
+### Supported Formats
+
+- **Input:** PNG, JPEG
+- **Output:** Always PNG (lossless, preserves hidden data)
+
+### Usage
+
+**Encoding:**
+
+1. Go to the **Image Stego** tab
+2. Select **Encode into Image**
+3. Upload a PNG or JPEG image
+4. Select bits per channel (1 or 2)
+5. Type your secret message
+6. Optionally enter a passphrase
+7. Click **Encode & Download PNG**
+8. The encoded image downloads automatically
+
+**Decoding:**
+
+1. Go to the **Image Stego** tab
+2. Select **Decode from Image**
+3. Upload the stego image
+4. Enter the passphrase (if encrypted)
+5. Click **Decode from Image**
+6. The extracted message appears

@@ -1,0 +1,65 @@
+---
+title: Encryption
+description: AES-256-GCM encryption for secure steganography.
+---
+
+## Overview
+
+The Steganography Tool includes optional **AES-256-GCM encryption** to protect your hidden messages. Even if someone discovers the steganographic content, they cannot read it without the correct passphrase.
+
+### How It Works
+
+1. **Key Derivation** — Your passphrase is converted to an AES-256 key using PBKDF2 with SHA-256 and 100,000 iterations
+2. **Random Salt** — A 16-byte random salt is generated for each encryption
+3. **Random IV** — A 12-byte random initialization vector is generated
+4. **Encryption** — The payload is encrypted using AES-256-GCM (authenticated encryption)
+5. **Output Format** — `[salt(16B)][iv(12B)][ciphertext + auth tag]`
+
+### Security Properties
+
+| Property | Value |
+|----------|-------|
+| Algorithm | AES-256-GCM |
+| Key Derivation | PBKDF2-SHA256 |
+| Iterations | 100,000 |
+| Salt Size | 16 bytes |
+| IV Size | 12 bytes |
+| Auth Tag | 16 bytes (GCM) |
+
+### Authenticated Encryption
+
+AES-GCM provides both **confidentiality** (encryption) and **integrity** (authentication). If the ciphertext is tampered with or the wrong passphrase is used, decryption fails with an error rather than producing garbage output.
+
+### Usage
+
+1. When encoding, enter a passphrase in the **Passphrase** field
+2. When decoding, enter the same passphrase to decrypt
+3. If the wrong passphrase is used, you'll see: *"Decryption failed. Wrong passphrase or corrupted data."*
+
+### Technical Details
+
+```typescript
+// Key derivation
+const keyMaterial = await crypto.subtle.importKey(
+  "raw",
+  encoder.encode(passphrase),
+  "PBKDF2",
+  false,
+  ["deriveKey"],
+);
+
+const key = await crypto.subtle.deriveKey(
+  { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+  keyMaterial,
+  { name: "AES-GCM", length: 256 },
+  false,
+  ["encrypt", "decrypt"],
+);
+
+// Encryption
+const encrypted = await crypto.subtle.encrypt(
+  { name: "AES-GCM", iv },
+  key,
+  plaintext,
+);
+```

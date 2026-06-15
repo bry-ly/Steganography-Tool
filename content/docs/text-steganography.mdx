@@ -1,0 +1,78 @@
+---
+title: Text Steganography
+description: Hide messages using zero-width Unicode characters.
+---
+
+## How It Works
+
+Text steganography hides secret messages inside visible cover text using **zero-width Unicode characters**. These characters are invisible to humans but can be detected and decoded programmatically.
+
+### The Algorithm
+
+1. **Convert** the secret message from UTF-8 text to binary (each byte becomes 8 bits)
+2. **Map** each bit to a zero-width character:
+   - Bit `0` → First selected character (e.g., U+200B ZERO WIDTH SPACE)
+   - Bit `1` → Second selected character (e.g., U+200C ZERO WIDTH NON-JOINER)
+3. **Append** a delimiter character (e.g., U+200D ZERO WIDTH JOINER)
+4. **Insert** the hidden sequence after the first word in the cover text
+
+### Processing Pipeline
+
+When a passphrase is provided, the data goes through:
+
+```
+Secret Text → Compress (pako) → Encrypt (AES-256-GCM) → Bit-map → ZW Characters
+```
+
+Without a passphrase:
+
+```
+Secret Text → Compress (pako) → Bit-map → ZW Characters
+```
+
+### Available Zero-Width Characters
+
+| Character | Code | Name |
+|-----------|------|------|
+| `​` | U+200B | Zero Width Space |
+| `‌` | U+200C | Zero Width Non-Joiner |
+| `‍` | U+200D | Zero Width Joiner |
+| `‎` | U+200E | Left-to-Right Mark |
+| `‪` | U+202A | Left-to-Right Embedding |
+| `‬` | U+202C | Pop Directional Formatting |
+| `‭` | U+202D | Left-to-Right Override |
+| `⁢` | U+2062 | Invisible Times |
+| `⁣` | U+2063 | Invisible Separator |
+| `﻿` | U+FEFF | Zero Width No-Break Space |
+
+Select any 3 or more characters. The first three are assigned roles:
+1. **Bit 0** — Represents binary `0`
+2. **Bit 1** — Represents binary `1`
+3. **Delimiter** — Marks the end of the hidden message
+
+### Capacity
+
+Each character of the secret requires **8 zero-width characters** (one per bit), plus 1 delimiter.
+
+- 100-character secret → 801 ZW characters
+- 1,000-character secret → 8,001 ZW characters
+
+The cover text must be long enough to accommodate the hidden data.
+
+### Usage
+
+**Encoding:**
+
+1. Go to the **Encode** tab
+2. Paste or upload cover text
+3. Type your secret message
+4. Optionally enter a passphrase for encryption
+5. Click **Encode Message**
+6. Copy or download the stego text
+
+**Decoding:**
+
+1. Go to the **Decode** tab
+2. Paste or upload the stego text
+3. Enter the passphrase (if encrypted)
+4. Click **Decode Message**

@@ -1,0 +1,59 @@
+---
+title: Getting Started
+description: Install and run the Steganography Tool locally.
+---
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) v18 or later
+- [pnpm](https://pnpm.io/) (recommended) or npm
+
+## Installation
+
+```bash
+git clone https://github.com/your-username/steganography-tool.git
+cd steganography-tool
+pnpm install
+```
+
+## Development
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Production Build
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Testing
+
+```bash
+pnpm test
+```
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router pages
+│   ├── layout.tsx          # Root layout with ThemeProvider
+│   ├── page.tsx            # Main UI (Encode, Decode, Image Stego tabs)
+│   └── docs/               # Documentation pages (Fumadocs)
+├── components/             # React components
+│   ├── theme-toggle.tsx    # Dark/light mode toggle
+│   ├── zw-char-selector.tsx # Zero-width character selector
+│   └── ui/                 # shadcn/ui components
+├── lib/                    # Core libraries
+│   ├── encryption.ts       # AES-256-GCM + PBKDF2 encryption
+│   ├── steganography.ts    # Zero-width character steganography engine
+│   ├── image-steganography.ts # LSB image steganography
+│   └── utils.ts            # Utility functions
+├── tests/                  # Vitest test files
+├── content/docs/           # Documentation MDX files
+└── source.config.ts        # Fumadocs MDX configuration
+```
