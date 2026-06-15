@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ZWCharSelector } from "@/components/zw-char-selector";
 import {
@@ -209,7 +210,12 @@ export default function Home() {
             <LockKeyIcon size={22} weight="duotone" />
             <h1 className="text-xl font-semibold tracking-tight">Steganography Tool</h1>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Docs
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           Hide secret messages inside plain text or images using steganography.
