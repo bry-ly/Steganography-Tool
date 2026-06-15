@@ -3,23 +3,35 @@ title: Steganography Tool
 description: Hide secret messages inside plain text or images using steganography.
 ---
 
-## Overview
+The Steganography Tool is a client-side web application that lets you hide secret messages inside plain text or images using steganography techniques. Everything runs in the browser — no server required.
 
-The Steganography Tool is a client-side web application that lets you hide secret messages inside plain text or images using steganography techniques.
+## Features
 
-### Features
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<Card icon={<span className="text-xl">🔒</span>} title="Text Steganography">
+Hide messages using zero-width Unicode characters that are invisible to human readers.
+</Card>
+<Card icon={<span className="text-xl">🖼️</span>} title="Image Steganography">
+Embed messages in the least significant bits of image pixels (LSB).
+</Card>
+<Card icon={<span className="text-xl">🔐</span>} title="AES-256-GCM Encryption">
+Optionally encrypt messages with a passphrase before hiding.
+</Card>
+<Card icon={<span className="text-xl">📦</span>} title="Zlib Compression">
+Automatically compresses payloads to minimize hidden data size.
+</Card>
+<Card icon={<span className="text-xl">🌙</span>} title="Dark Mode">
+Full light/dark theme support with system preference detection.
+</Card>
+<Card icon={<span className="text-xl">🌐</span>} title="No Server Required">
+Everything runs in the browser using the Web Crypto API.
+</Card>
+</div>
 
-- **Text Steganography** — Hide messages using zero-width Unicode characters that are invisible to human readers
-- **Image Steganography** — Embed messages in the least significant bits of image pixels (LSB)
-- **AES-256-GCM Encryption** — Optionally encrypt messages with a passphrase before hiding
-- **Zlib Compression** — Automatically compresses payloads to minimize hidden data size
-- **Dark Mode** — Full light/dark theme support
-- **No Server Required** — Everything runs in the browser using the Web Crypto API
+## Quick Links
 
-### Quick Links
-
-- [Getting Started](/docs/getting-started)
-- [Text Steganography](/docs/text-steganography)
-- [Image Steganography](/docs/image-steganography)
-- [Encryption](/docs/encryption)
-- [API Reference](/docs/api-reference)
+- [Getting Started](/docs/getting-started) — Install and run the tool
+- [Text Steganography](/docs/text-steganography) — How ZW-character encoding works
+- [Image Steganography](/docs/image-steganography) — How LSB image encoding works
+- [Encryption](/docs/encryption) — AES-256-GCM encryption details
+- [API Reference](/docs/api-reference) — Full function signatures
