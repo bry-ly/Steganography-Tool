@@ -9,25 +9,25 @@ description: Library APIs for encryption, steganography, and image steganography
 
 Encrypts a Uint8Array payload using AES-256-GCM.
 
-**Parameters:**
-- `plaintext: Uint8Array` — The data to encrypt
-- `passphrase: string` — The passphrase for key derivation
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `plaintext` | `Uint8Array` | The data to encrypt |
+| `passphrase` | `string` | The passphrase for key derivation |
 
-**Returns:** `Promise<Uint8Array>` — Encrypted data with salt, IV, and auth tag prepended
-
-**Throws:** Never throws on valid input
+**Returns:** `Promise<Uint8Array>` — Encrypted data with salt, IV, and auth tag prepended.
 
 ### `decryptMessage(ciphertext, passphrase)`
 
 Decrypts data encrypted with `encryptMessage`.
 
-**Parameters:**
-- `ciphertext: Uint8Array` — The encrypted data
-- `passphrase: string` — The passphrase for key derivation
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `ciphertext` | `Uint8Array` | The encrypted data |
+| `passphrase` | `string` | The passphrase for key derivation |
 
-**Returns:** `Promise<Uint8Array>` — Decrypted plaintext
+**Returns:** `Promise<Uint8Array>` — Decrypted plaintext.
 
-**Throws:** `EncryptionError` if decryption fails (wrong passphrase, corrupted data, or truncated ciphertext)
+**Throws:** `EncryptionError` if decryption fails (wrong passphrase, corrupted data, or truncated ciphertext).
 
 ---
 
@@ -37,48 +37,52 @@ Decrypts data encrypted with `encryptMessage`.
 
 Hides a secret message inside cover text using zero-width characters.
 
-**Parameters:**
-- `coverText: string` — The visible text to hide data in
-- `secret: string | Uint8Array` — The message to hide
-- `chars: string[]` — (Optional) Zero-width characters to use (default: `["\u200B", "\u200C", "\u200D"]`)
-- `passphrase: string` — (Optional) Passphrase for encryption
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `coverText` | `string` | The visible text to hide data in |
+| `secret` | `string \| Uint8Array` | The message to hide |
+| `chars` | `string[]` | (Optional) Zero-width characters to use |
+| `passphrase` | `string` | (Optional) Passphrase for encryption |
 
-**Returns:** `Promise<string>` — The stego text with hidden data
+**Returns:** `Promise<string>` — The stego text with hidden data.
 
-**Throws:** `EncodeError` if cover text is empty, secret is empty, or fewer than 3 chars selected
+**Throws:** `EncodeError` if cover text is empty, secret is empty, or fewer than 3 chars selected.
 
 ### `decodeMessage(stegoText, chars?, passphrase?)`
 
 Extracts a hidden message from stego text.
 
-**Parameters:**
-- `stegoText: string` — The text containing hidden data
-- `chars: string[]` — (Optional) Zero-width characters used (must match encoding)
-- `passphrase: string` — (Optional) Passphrase for decryption
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `stegoText` | `string` | The text containing hidden data |
+| `chars` | `string[]` | (Optional) Zero-width characters used (must match encoding) |
+| `passphrase` | `string` | (Optional) Passphrase for decryption |
 
-**Returns:** `Promise<string>` — The extracted secret message
+**Returns:** `Promise<string>` — The extracted secret message.
 
-**Throws:** `DecodeError` if no hidden message found, or `SteganographyError` if decryption fails
+**Throws:** `DecodeError` if no hidden message found, or `SteganographyError` if decryption fails.
 
 ### `prepareSecret(secret, passphrase?)`
 
 Compresses and optionally encrypts a secret payload.
 
-**Parameters:**
-- `secret: string | Uint8Array` — The data to prepare
-- `passphrase: string` — (Optional) Passphrase for encryption
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `secret` | `string \| Uint8Array` | The data to prepare |
+| `passphrase` | `string` | (Optional) Passphrase for encryption |
 
-**Returns:** `Promise<Uint8Array>` — The prepared payload
+**Returns:** `Promise<Uint8Array>` — The prepared payload.
 
 ### `extractSecret(data, passphrase?)`
 
 Decompresses and optionally decrypts a secret payload.
 
-**Parameters:**
-- `data: Uint8Array` — The payload to extract
-- `passphrase: string` — (Optional) Passphrase for decryption
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `data` | `Uint8Array` | The payload to extract |
+| `passphrase` | `string` | (Optional) Passphrase for decryption |
 
-**Returns:** `Promise<string>` — The extracted text
+**Returns:** `Promise<string>` — The extracted text.
 
 ### Error Classes
 
@@ -101,56 +105,61 @@ Decompresses and optionally decrypts a secret payload.
 
 Embeds data into image pixels using LSB steganography.
 
-**Parameters:**
-- `imageData: ImageData` — The source image data
-- `data: Uint8Array` — The payload to embed
-- `bitsPerChannel: 1 | 2` — (Optional) Bits to use per channel (default: 1)
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `imageData` | `ImageData` | The source image data |
+| `data` | `Uint8Array` | The payload to embed |
+| `bitsPerChannel` | `1 \| 2` | (Optional) Bits to use per channel (default: 1) |
 
-**Returns:** `ImageData` — Modified image data with hidden payload
+**Returns:** `ImageData` — Modified image data with hidden payload.
 
-**Throws:** `ImageSteganographyError` if data exceeds image capacity
+**Throws:** `ImageSteganographyError` if data exceeds image capacity.
 
 ### `decodeFromImage(imageData, bitsPerChannel?)`
 
 Extracts hidden data from image pixels.
 
-**Parameters:**
-- `imageData: ImageData` — The image to extract from
-- `bitsPerChannel: 1 | 2` — (Optional) Bits used per channel (default: 1)
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `imageData` | `ImageData` | The image to extract from |
+| `bitsPerChannel` | `1 \| 2` | (Optional) Bits used per channel (default: 1) |
 
-**Returns:** `Uint8Array` — The extracted payload
+**Returns:** `Uint8Array` — The extracted payload.
 
-**Throws:** `ImageSteganographyError` if no valid hidden data found
+**Throws:** `ImageSteganographyError` if no valid hidden data found.
 
 ### `getImageCapacity(width, height, bitsPerChannel?)`
 
 Calculates the maximum payload size for an image.
 
-**Parameters:**
-- `width: number` — Image width in pixels
-- `height: number` — Image height in pixels
-- `bitsPerChannel: 1 | 2` — (Optional) Bits per channel (default: 1)
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `width` | `number` | Image width in pixels |
+| `height` | `number` | Image height in pixels |
+| `bitsPerChannel` | `1 \| 2` | (Optional) Bits per channel (default: 1) |
 
-**Returns:** `CapacityInfo` — `{ maxBytes, bitsPerChannel, totalPixels }`
+**Returns:** `CapacityInfo` — `{ maxBytes, bitsPerChannel, totalPixels }`.
 
 ### `imageDataFromFile(file)`
 
 Loads an image file as ImageData using Canvas API.
 
-**Parameters:**
-- `file: File` — The image file to load
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file` | `File` | The image file to load |
 
-**Returns:** `Promise<ImageData>`
+**Returns:** `Promise<ImageData>`.
 
-**Throws:** `ImageSteganographyError` if image fails to load
+**Throws:** `ImageSteganographyError` if image fails to load.
 
 ### `imageDataToPngBlob(imageData)`
 
 Converts ImageData to a PNG Blob.
 
-**Parameters:**
-- `imageData: ImageData` — The image data to convert
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `imageData` | `ImageData` | The image data to convert |
 
-**Returns:** `Promise<Blob>` — PNG image blob
+**Returns:** `Promise<Blob>` — PNG image blob.
 
-**Throws:** `ImageSteganographyError` if encoding fails
+**Throws:** `ImageSteganographyError` if encoding fails.
