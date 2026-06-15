@@ -135,6 +135,18 @@ export default function Home() {
     e.target.value = "";
   }
 
+  function handleImageRemove() {
+    setImageFile(null);
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    setImagePreviewUrl("");
+    setImageDims(null);
+    setImageSecret("");
+    setImagePassphrase("");
+    setImageEncodeError("");
+    setImageDecodeError("");
+    setImageDecodeResult("");
+  }
+
   async function handleImageEncode() {
     if (!imageFile) { setImageEncodeError("Select an image first."); return; }
     if (!imageSecret) { setImageEncodeError("Enter a secret message."); return; }
@@ -351,13 +363,13 @@ export default function Home() {
               <div className="flex gap-1 rounded-lg bg-muted p-1 w-fit">
                 <button
                   className={`px-3 py-1.5 text-sm rounded-md transition-colors ${imageMode === "encode" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => { setImageMode("encode"); setImageEncodeError(""); setImageDecodeError(""); }}
+                  onClick={() => { setImageMode("encode"); setImageEncodeError(""); setImageDecodeError(""); setImageDecodeResult(""); }}
                 >
                   Encode into Image
                 </button>
                 <button
                   className={`px-3 py-1.5 text-sm rounded-md transition-colors ${imageMode === "decode" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => { setImageMode("decode"); setImageEncodeError(""); setImageDecodeError(""); }}
+                  onClick={() => { setImageMode("decode"); handleImageRemove(); }}
                 >
                   Decode from Image
                 </button>
@@ -367,9 +379,16 @@ export default function Home() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="image-file">Image</Label>
-                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => imageFileRef.current?.click()}>
-                  <UploadSimpleIcon size={12} /> Upload Image
-                </Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => imageFileRef.current?.click()}>
+                    <UploadSimpleIcon size={12} /> Upload Image
+                  </Button>
+                  {imageFile && (
+                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive" onClick={handleImageRemove}>
+                      Remove
+                    </Button>
+                  )}
+                </div>
                 <input ref={imageFileRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleImageFile} />
               </div>
               {imagePreviewUrl && (
