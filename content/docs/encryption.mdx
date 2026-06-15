@@ -26,15 +26,15 @@ The Steganography Tool includes optional **AES-256-GCM encryption** to protect y
 | IV Size | 12 bytes |
 | Auth Tag | 16 bytes (GCM) |
 
-### Authenticated Encryption
-
-AES-GCM provides both **confidentiality** (encryption) and **integrity** (authentication). If the ciphertext is tampered with or the wrong passphrase is used, decryption fails with an error rather than producing garbage output.
+<Callout type="warn">
+**Authenticated encryption** means that if the ciphertext is tampered with or the wrong passphrase is used, decryption fails with an error rather than producing garbage output. Never reuse the same passphrase+message combination for security-critical applications.
+</Callout>
 
 ### Usage
 
 1. When encoding, enter a passphrase in the **Passphrase** field
 2. When decoding, enter the same passphrase to decrypt
-3. If the wrong passphrase is used, you'll see: *"Decryption failed. Wrong passphrase or corrupted data."*
+3. If the wrong passphrase is used, you'll see an error: "Decryption failed. Wrong passphrase or corrupted data."
 
 ### Technical Details
 
