@@ -6,6 +6,6 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: "Stegnohide",
     },
-    githubUrl: "https://github.com/your-username/steganography-tool",
+    githubUrl: "https://github.com/bry-ly/steganography-tool",
   };
 }
