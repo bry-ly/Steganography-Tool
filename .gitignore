@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -42,3 +43,22 @@ next-env.d.ts
 
 # fumadocs
 .source/
+
+# IDE
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Test artifacts
+coverage/
+*.lcov
+.vitest-cache/
+
+# Bundle analysis
+.next/analyze/
