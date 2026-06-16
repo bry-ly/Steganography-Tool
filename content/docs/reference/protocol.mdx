@@ -1,0 +1,102 @@
+---
+title: Protocol
+description: Exact wire format for stego payloads — header byte, compression flag, and encryption envelope.
+icon: Binary
+---
+
+This page describes the exact byte-level format of a StegnoHide payload. It is what the encoder writes and what the decoder reads. The format is identical for text mode and image mode — only the carrier differs.
+
+## High-Level Pipeline
+
+```
+plaintext (UTF-8)
+  → [optional] compress (zlib raw deflate)
+  → [optional] encrypt (AES-256-GCM)
+  → byte stream
+  → embed into cover
+```
+
+The decoder runs the same pipeline in reverse.
+
+## Compression Envelope
+
+Compression is the first envelope. A 1-byte flag indicates whether the payload is compressed.
+
+| Byte | Meaning |
+|------|---------|
+| `0x00` | Uncompressed. The remaining bytes are the plaintext. |
+| `0x01` | Compressed with zlib raw deflate. The remaining bytes are the deflate stream. |
+
+The encoder picks the smaller of the two representations. If `deflate(data).length < data.length`, the flag is `0x01`; otherwise `0x00`.
+
+The decoder reads the first byte, dispatches on its value, and consumes the rest of the payload.
+
+## Encryption Envelope
+
+If a passphrase is provided, the entire compression envelope (`flag || body`) is encrypted with **AES-256-GCM**. The output is:
+
+```
+salt(16) || iv(12) || ciphertext+tag
+```
+
+| Field | Size | Source |
+|-------|------|--------|
+| `salt` | 16 bytes | `crypto.getRandomValues` |
+| `iv` | 12 bytes | `crypto.getRandomValues` |
+| `ciphertext` | variable | AES-256-GCM output |
+| `tag` | 16 bytes | Appended to `ciphertext` by the Web Crypto API |
+
+The key is derived from the passphrase with **PBKDF2-SHA256** using the salt and **100,000 iterations**, producing a 256-bit AES key.
+
+The minimum encrypted payload size is `16 + 12 + 16 = 44` bytes (when the inner payload is empty after compression). Decoding anything shorter than 28 bytes (the salt + IV with no body) throws `EncryptionError`.
+
+## Text Mode Layout
+
+In text mode, the entire byte stream is the `prepareSecret` output (compression envelope, optionally wrapped in the encryption envelope). It is laid out into the cover as:
+
+```
+cover[0:firstWhitespace) + bitstream + delimiter + cover[firstWhitespace:end]
+```
+
+where:
+
+- `bitstream[i]` is `bit0Char` if the i-th payload bit is 0, else `bit1Char`.
+- `delimiter` is the third selected zero-width character.
+- `firstWhitespace` is the index of the first space, tab, or newline in the cover. If there is no whitespace, the bitstream and delimiter are appended at the end.
+
+Bits are emitted **MSB first** within each byte.
+
+## Image Mode Layout
+
+In image mode, the entire byte stream is again the `prepareSecret` output. The image is treated as a flat array of pixels in scan order (top-left to bottom-right). For each pixel, the function writes into R, then G, then B. Alpha is preserved.
+
+The first 32 LSB slots hold the payload length in bits as a **little-endian uint32**. The remaining bits are the payload, again MSB first within each byte.
+
+At `bitsPerChannel = 1`, the function writes into the LSB of each channel. At `bitsPerChannel = 2`, it writes into the two LSBs.
+
+## Example: A 12-Byte Encrypted Secret
+
+Suppose the plaintext is `"hi"`, which is 2 bytes. The compression envelope (without passphrase):
+
+```
+flag=0x00, body=0x68 0x69
+```
+
+That's 3 bytes. With a passphrase, those 3 bytes are encrypted and prepended with the salt and IV:
+
+```
+salt(16) || iv(12) || ciphertext+tag
+```
+
+The encrypted body is the 3-byte plaintext plus the 16-byte GCM auth tag, so the full envelope is `16 + 12 + 3 + 16 = 47` bytes.
+
+## Why These Choices
+
+- **zlib raw deflate** (no header) is one of the most space-efficient general-purpose compressors and is built into every browser via `pako`.
+- **AES-256-GCM** provides authenticated encryption. A wrong passphrase or a corrupted payload is rejected with `EncryptionError` rather than producing garbage output.
+- **Random salt + IV per message** means encrypting the same secret twice produces different ciphertexts.
+- **Length header in image mode** means a partially-decoded image can still report its true length, allowing the decoder to detect missing or corrupted data.
+
+## Versioning
+
+There is no version byte in the format. The compression flag is the only metadata. A future change to the wire format would add a version byte after the compression flag and a migration path in `extractSecret`.

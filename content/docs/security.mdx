@@ -1,0 +1,63 @@
+---
+title: Security
+description: Threat model, cryptography details, and what StegnoHide does and doesn't protect against.
+icon: Shield
+---
+
+<Callout type="warn">
+Steganography is **not** encryption. Without a passphrase, anyone who knows to look can extract the hidden bytes. Always use the passphrase option if the content matters.
+</Callout>
+
+## Threat Model
+
+StegnoHide protects against the following adversaries:
+
+- **A passive observer who does not know steganography is in use.** They see only the cover. The hidden data is invisible.
+- **An attacker who knows the tool was used but does not have the passphrase.** They cannot read the message. AES-256-GCM with a unique per-message salt and IV is the actual encryption layer.
+- **Statistical analysis without the passphrase.** The detection reveals that stego was *used*, not what the message *says*.
+
+StegnoHide does **not** protect against:
+
+- **An attacker with the passphrase.** The passphrase is the secret.
+- **A motivated forensic analyst with the original cover source.** They can diff to find modifications.
+- **Lossy platforms.** Most chat apps and social networks destroy the very bits the tool relies on. See [Limitations](/docs/limitations).
+- **Keyloggers, screen capture, and shoulder-surfing.** The passphrase is typed into a normal HTML input. Use a password manager.
+- **Compromised browser extensions or hosting.** A malicious extension or hostile CDN can read everything in the page.
+
+## Cryptography
+
+When the passphrase option is enabled, the pipeline is:
+
+1. Secret → UTF-8 bytes
+2. Bytes → zlib deflate (raw, no header) — skipped if it makes the payload larger
+3. Compressed bytes → AES-256-GCM encrypt
+4. Output envelope: `salt(16) || iv(12) || ciphertext+tag`
+
+The key is derived with **PBKDF2-SHA256**, **100,000 iterations**, using the random salt. The IV is **12 random bytes**. The auth tag is the standard 16-byte GCM tag (appended to the ciphertext by the Web Crypto API).
+
+<Callout type="info">
+The PBKDF2 iteration count is hard-coded. A future version may expose it as a tuning knob.
+</Callout>
+
+## Text Mode Specifics
+
+The first three selected zero-width characters are used as **bit 0**, **bit 1**, and **delimiter**. The selected alphabet is not a cryptographic key — it's an alphabet. Selecting more characters gives you fallback options if a platform strips a particular one, but it does not increase the cryptographic strength.
+
+The hidden sequence is inserted at the **first whitespace** in the cover. This keeps the visible text byte-for-byte identical except for the insertion point. If there is no whitespace, the sequence is appended at the end.
+
+## Image Mode Specifics
+
+The first **32 LSB slots** of the encoded image hold the payload length in bits (little-endian uint32). The remaining bits are written into the R, G, B channels of each pixel in scan order. The alpha channel is preserved.
+
+The output is always **PNG** to preserve LSBs. The source image is decoded with the Canvas API, which is lossless for PNG but lossy for JPEG/WebP/HEIC/AVIF (those sources are already noisy in their LSBs; the tool warns you).
+
+## Operational Notes
+
+- **No server.** The tool runs entirely in your browser. There is no upload step, no logging, no analytics.
+- **No persistence.** Closing the tab clears everything. Refreshing the page does too.
+- **Memory-only secrets.** The passphrase, secret, and cover are in JavaScript memory only. They are not stored in localStorage, sessionStorage, IndexedDB, cookies, or anywhere else.
+- **No third-party network calls** at runtime. The static assets are served from the same origin as the app.
+
+## Reporting a Vulnerability
+
+Please see [`SECURITY.md`](https://github.com/your-username/stegnohide/blob/main/SECURITY.md) at the repository root for coordinated disclosure instructions. **Do not file public issues for security-sensitive reports.**

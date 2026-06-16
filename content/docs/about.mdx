@@ -1,0 +1,36 @@
+---
+title: About
+description: What StegnoHide is and why it exists.
+icon: Info
+---
+
+StegnoHide is a small, focused web app for hiding secret messages inside ordinary-looking cover text or inside a PNG image. It was built to be:
+
+- **Client-side only.** No server, no upload step, no telemetry. Your cover, your secret, and your passphrase never leave your device.
+- **Standards-based.** The cryptography is Web Crypto. The compression is zlib. The text encoding uses Unicode. There is no proprietary format.
+- **Auditable.** The full source is small enough to read in an afternoon. There are no minified blobs, no dynamic imports from CDNs, and no `eval`.
+- **Quiet.** The output looks like the cover. The cover looks like the cover. Nothing visual or structural is changed that would visibly betray the presence of a hidden message.
+
+## Non-Goals
+
+- **Not a secure messenger.** StegnoHide does not transmit messages. It only embeds and extracts them.
+- **Not a substitute for encryption.** Steganography hides the *existence* of a message. Use the passphrase option (AES-256-GCM) to also hide the *content*.
+- **Not resistant to platform-level stripping.** Most chat apps, social networks, and rich-text editors will mangle zero-width characters and re-encode images. See [Limitations](/docs/limitations) before relying on this for a real exchange.
+- **Not an anonymity tool.** Hiding a message in a cover does not anonymize you. Use Tor, a VPN, or whatever else you need for transport-layer anonymity.
+
+## When To Use It
+
+- Fun notes that look like ordinary text to a casual reader.
+- Watermarking a draft by embedding an author tag in a copy you share.
+- Demonstrating steganography in a class or talk.
+- Sending a small payload through a channel where stego survives and the recipient has the tool or instructions to extract it.
+
+## When Not To Use It
+
+- The channel is lossy or normalizing and you have not verified the round-trip works.
+- The threat model requires strong deniability. ZW-character frequency analysis is a well-known detection method.
+- You need plausible deniability against a forensic analyst with the cover source — they can diff.
+
+## Credits
+
+Built with Next.js, Fumadocs, Tailwind, shadcn/ui, Phosphor Icons, and pako. The cryptography uses the platform's built-in Web Crypto API.

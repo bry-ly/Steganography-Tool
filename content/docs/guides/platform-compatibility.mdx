@@ -1,0 +1,102 @@
+---
+title: Platform Compatibility
+description: Where stego text and stego images survive the round trip, and where they don't.
+icon: Globe
+---
+
+<Callout type="warn">
+This page is a best-effort snapshot. Platforms change their handling of Unicode and image encoding without notice. **Always test a round trip in the actual channel before relying on StegnoHide for a real exchange.**
+</Callout>
+
+## Text Mode
+
+The hidden message is a sequence of zero-width Unicode characters inserted into the cover text. Whether they survive depends entirely on the platform's text handling.
+
+### Preserves ZW characters
+
+These platforms tend to keep zero-width characters intact:
+
+| Platform | Notes |
+|----------|-------|
+| Email (`.txt` attachment) | The attachment is sent byte-for-byte. |
+| GitHub (gists, issues, comments, code) | All ZW chars render and survive copy-paste. |
+| Pastebin / privatebin | Most paste services preserve all bytes. |
+| Code editors and IDEs | VS Code, Sublime, etc. preserve ZW chars in source files. |
+| Markdown files in static site generators | The HTML output preserves ZW chars. |
+| `<pre>` / `<code>` blocks in HTML | Browser rendering of these elements is faithful. |
+| Telegram (saved messages, "code" pre) | Mixed — see below. |
+| Discord (code blocks) | Backticked code blocks survive; regular chat does not. |
+
+### Strips or normalizes ZW characters
+
+These platforms tend to lose at least some zero-width characters:
+
+| Platform | What's lost |
+|----------|-------------|
+| WhatsApp | Strips most ZW chars on send. |
+| Discord (regular chat) | Strips most ZW chars. |
+| Slack | Strips U+200B–U+200D, normalizes or strips others. |
+| Microsoft Teams | Strips most ZW chars. |
+| Twitter/X DMs | Strips most ZW chars. |
+| Facebook Messenger | Strips most ZW chars. |
+| Instagram DMs | Strips most ZW chars. |
+| Google Docs | Strips ZW chars silently on paste. |
+| Microsoft Word | Strips ZW chars with autocorrect on. |
+| Most HTML email clients | Inline styles and rich-text editors often strip ZW. |
+| iMessage | Strips most ZW chars in regular text bubbles. |
+
+### Workarounds
+
+- **Pick a ZW set that survives.** If you must use a stripping platform, the tool still works as long as the platform is consistent about which chars it strips. Try alternate selections and verify the round trip.
+- **Send as a file attachment** when the channel supports it.
+- **Use image mode** if the channel reliably preserves images.
+
+## Image Mode
+
+The hidden message is in the LSBs of the PNG. Whether they survive depends on whether the channel re-encodes the image.
+
+### Preserves LSBs
+
+These platforms tend to send the original bytes:
+
+| Platform | Notes |
+|----------|-------|
+| Email attachment (PNG) | Sent as-is. |
+| Cloud storage (Drive, Dropbox, iCloud, S3) | Preserved when downloaded. |
+| IPFS | Preserved by content addressing. |
+| GitHub (issues, comments) | Preserves PNG bytes. |
+| Discord (as a file attachment) | Preserves the file. |
+| Telegram (as a file) | Preserves the file. |
+| Signal (as an attachment) | Preserves the file. |
+
+### Re-encodes images (destroys LSBs)
+
+These platforms convert your PNG to JPEG or re-encode the PNG, destroying LSBs:
+
+| Platform | Re-encoding behavior |
+|----------|----------------------|
+| Facebook (uploaded images) | Always re-encoded. |
+| Instagram | Always re-encoded. |
+| Twitter/X | Always re-encoded. |
+| LinkedIn | Always re-encoded. |
+| WhatsApp (in-chat images) | Always re-encoded. |
+| Discord (in-chat images) | Re-encoded except in DMs with nitro or specific clients. |
+| Slack (in-chat images) | Re-encoded. |
+| Reddit | Re-encoded. |
+| Most blogs and forums | Re-encoded. |
+| iMessage (in-chat photos) | Re-encoded. |
+
+### Workarounds
+
+- **Send as a file attachment**, not as an in-chat image.
+- **Zip the PNG** before sending. Many platforms let `.zip` files through unaltered, and the recipient unzips to get the original PNG.
+- **Use text mode** if the channel preserves ZW characters.
+
+## How to Test a Round Trip
+
+1. Encode a small known message ("hello world") with a passphrase.
+2. Send the stego output through the actual channel you intend to use.
+3. Open the received file/text in the decoder (paste the text or upload the image).
+4. Confirm the extracted message matches.
+
+If decoding fails with "No hidden message found", the channel stripped the data — pick a different channel, send as a file attachment, or use image mode with a `.zip` wrapper.

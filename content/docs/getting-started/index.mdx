@@ -65,36 +65,75 @@ pnpm test:watch
     <File name="page.tsx" />
     <Folder name="docs">
       <File name="layout.tsx" />
-      <File name="[[...slug]]/page.tsx" />
+      <Folder name="[[...slug]]">
+        <File name="page.tsx" />
+      </Folder>
     </Folder>
   </Folder>
-  <Folder name="components">
+  <Folder name="components" defaultOpen>
+    <File name="logo.tsx" />
+    <File name="mdx.tsx" />
+    <File name="nav-title.tsx" />
+    <File name="pass-phrase-input.tsx" />
     <File name="theme-toggle.tsx" />
+    <File name="text-encode-tab.tsx" />
+    <File name="text-decode-tab.tsx" />
+    <File name="image-stego-tab.tsx" />
     <File name="zw-char-selector.tsx" />
-    <Folder name="ui" />
+    <Folder name="ui">
+      <File name="badge.tsx" />
+      <File name="button.tsx" />
+      <File name="card.tsx" />
+      <File name="checkbox.tsx" />
+      <File name="label.tsx" />
+      <File name="separator.tsx" />
+      <File name="sonner.tsx" />
+      <File name="tabs.tsx" />
+      <File name="textarea.tsx" />
+    </Folder>
   </Folder>
-  <Folder name="lib">
+  <Folder name="lib" defaultOpen>
     <File name="encryption.ts" />
-    <File name="steganography.ts" />
+    <File name="file.ts" />
+    <File name="image-source.ts" />
     <File name="image-steganography.ts" />
+    <File name="layout.shared.tsx" />
+    <File name="source.ts" />
+    <File name="steganography.ts" />
     <File name="utils.ts" />
   </Folder>
   <Folder name="content/docs" defaultOpen>
-    <File name="meta.json" />
     <File name="index.mdx" />
+    <File name="meta.json" />
     <Folder name="getting-started">
-      <File name="meta.json" />
       <File name="index.mdx" />
+      <File name="meta.json" />
     </Folder>
     <Folder name="guides">
-      <File name="meta.json" />
-      <File name="text-steganography.mdx" />
-      <File name="image-steganography.mdx" />
       <File name="encryption.mdx" />
+      <File name="image-steganography.mdx" />
+      <File name="text-steganography.mdx" />
     </Folder>
     <Folder name="reference">
-      <File name="meta.json" />
       <File name="api-reference.mdx" />
     </Folder>
   </Folder>
+  <Folder name="tests" defaultOpen>
+    <File name="encryption.test.ts" />
+    <File name="image-steganography.test.ts" />
+    <File name="steganography.test.ts" />
+  </Folder>
+  <Folder name="public">
+    <Folder name="logo" />
+  </Folder>
 </Files>
+
+## What's Where
+
+- **`app/page.tsx`** — thin shell that mounts the tab UI. All the actual UI lives in `components/*-tab.tsx`.
+- **`lib/steganography.ts`** — ZW-character encoding, compression, encryption envelope.
+- **`lib/image-steganography.ts`** — LSB image encoding and PNG output.
+- **`lib/encryption.ts`** — AES-256-GCM with PBKDF2 key derivation.
+- **`lib/file.ts`** — browser file I/O helpers (read text, download, clipboard).
+- **`lib/image-source.ts`** — detects lossy source images (JPEG/WebP/HEIC/AVIF).
+- **`content/docs/`** — MDX source for the `/docs` site.

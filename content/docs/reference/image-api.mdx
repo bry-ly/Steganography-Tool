@@ -1,0 +1,157 @@
+---
+title: Image API
+description: Full reference for lib/image-steganography.ts.
+icon: Image
+---
+
+The image steganography module encodes arbitrary bytes into the LSBs of an image and decodes them back. All functions are pure (no DOM access) except for the file/blob helpers.
+
+## `getImageCapacity(width, height, bitsPerChannel?)`
+
+Returns the maximum payload size that fits in an image of the given dimensions.
+
+```ts
+import { getImageCapacity } from "@/lib/image-steganography";
+
+const { maxBytes, totalPixels } = getImageCapacity(1920, 1080, 1);
+// maxBytes: ~972000, totalPixels: 2073600
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `width` | `number` | — | Image width in pixels |
+| `height` | `number` | — | Image height in pixels |
+| `bitsPerChannel` | `1 \| 2` | `1` | Bits to use per RGB channel |
+
+**Returns:** `CapacityInfo` with `maxBytes`, `bitsPerChannel`, `totalPixels`.
+
+The formula is `(width × height × 3 × bitsPerChannel − 32) / 8`. The 32-bit header holds the payload length, so the usable payload is reduced by 4 bytes.
+
+## `encodeIntoImage(imageData, data, bitsPerChannel?)`
+
+Embeds the byte payload into a copy of the provided `ImageData` and returns the new `ImageData`.
+
+```ts
+import { encodeIntoImage } from "@/lib/image-steganography";
+
+const encoded = encodeIntoImage(imageData, payloadBytes, 1);
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `imageData` | `ImageData` | — | Source image |
+| `data` | `Uint8Array` | — | Payload bytes (already compressed/encrypted) |
+| `bitsPerChannel` | `1 \| 2` | `1` | Bits per RGB channel |
+
+**Returns:** `ImageData` — modified copy with hidden data in LSBs.
+
+**Throws:** `ImageSteganographyError` if `data.length × 8 + 32 > width × height × 3 × bitsPerChannel`.
+
+The function does not mutate the input `ImageData`. The alpha channel is preserved.
+
+## `decodeFromImage(imageData, bitsPerChannel?)`
+
+Reads the length header and the payload from LSBs and returns the bytes.
+
+```ts
+import { decodeFromImage } from "@/lib/image-steganography";
+
+const bytes = decodeFromImage(imageData, 1);
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `imageData` | `ImageData` | — | Source image |
+| `bitsPerChannel` | `1 \| 2` | `1` | Bits per channel used at encoding time |
+
+**Returns:** `Uint8Array` — the payload bytes.
+
+**Throws:** `ImageSteganographyError` if the header is missing (all-zero length) or the declared length exceeds the image capacity.
+
+## `imageDataFromFile(file)`
+
+Loads a `File` (from an `<input type="file">` or a drop event) into an `ImageData` using the Canvas API.
+
+```ts
+import { imageDataFromFile } from "@/lib/image-steganography";
+
+const imageData = await imageDataFromFile(file);
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file` | `File` | An image file |
+
+**Returns:** `Promise<ImageData>`.
+
+**Throws:** `ImageSteganographyError` if the image fails to decode.
+
+The function decodes via `Image.src = URL.createObjectURL(file)` and `ctx.getImageData`. JPEG/WebP/HEIC/AVIF inputs are decoded by the browser's image codec, which is lossy — their LSBs are already noisy. PNG inputs are decoded losslessly.
+
+## `imageDataToPngBlob(imageData)`
+
+Encodes `ImageData` to a PNG `Blob` for download or upload.
+
+```ts
+import { imageDataToPngBlob } from "@/lib/image-steganography";
+
+const blob = await imageDataToPngBlob(encoded);
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `imageData` | `ImageData` | The image to encode |
+
+**Returns:** `Promise<Blob>` — PNG-encoded image.
+
+**Throws:** `ImageSteganographyError` if the canvas encoder fails.
+
+The output is always `image/png` regardless of the source format. This is by design — JPEG output would destroy the LSBs.
+
+## `CapacityInfo`
+
+```ts
+interface CapacityInfo {
+  maxBytes: number;
+  bitsPerChannel: 1 | 2;
+  totalPixels: number;
+}
+```
+
+## `ImageSteganographyError`
+
+The single error class thrown by all functions in this module. Catch it once and inspect `e.message` for the human-readable cause.
+
+## End-to-End Example
+
+```ts
+import { prepareSecret } from "@/lib/steganography";
+import {
+  encodeIntoImage,
+  decodeFromImage,
+  extractSecret,
+  imageDataFromFile,
+  imageDataToPngBlob,
+  getImageCapacity,
+} from "@/lib/image-steganography";
+
+// Encode
+const file = input.files[0];
+const imageData = await imageDataFromFile(file);
+const payload = await prepareSecret("the eagle flies at midnight", "correct horse battery staple");
+const { maxBytes } = getImageCapacity(imageData.width, imageData.height, 1);
+if (payload.length > maxBytes) throw new Error("Image too small");
+const encoded = encodeIntoImage(imageData, payload, 1);
+const blob = await imageDataToPngBlob(encoded);
+
+// Decode (separately, on the recipient side)
+const imageData2 = await imageDataFromFile(receivedFile);
+const bytes = decodeFromImage(imageData2, 1);
+const secret = await extractSecret(bytes, "correct horse battery staple");
+```
+
+## See Also
+
+- [Protocol](/docs/reference/protocol) — the exact wire format (header, envelope, magic bytes)
+- [Image Steganography guide](/docs/guides/image-steganography) — algorithm overview and capacity tables
+- [API Reference](/docs/reference/api-reference) — text-mode and encryption API

@@ -1,0 +1,74 @@
+---
+title: FAQ
+description: Frequently asked questions about StegnoHide.
+icon: CircleQuestionMark
+---
+
+## Is StegnoHide free?
+
+Yes. The source is MIT-licensed and the hosted version is free to use.
+
+## Does my data ever leave my device?
+
+No. StegnoHide is 100% client-side. There is no upload step, no API call, and no analytics. You can verify this by running the app with the network tab open and the dev server's network panel empty after page load.
+
+## How is the secret actually hidden?
+
+- **Text mode:** the secret is compressed, optionally encrypted, then encoded as a sequence of zero-width Unicode characters (U+200B, U+200C, U+200D, and others) inserted into the cover text.
+- **Image mode:** the secret is compressed, optionally encrypted, then written into the least significant bits of the red, green, and blue channels of each pixel in the cover image. The output is always PNG.
+
+See [Text Steganography](/docs/guides/text-steganography) and [Image Steganography](/docs/guides/image-steganography) for the full algorithm.
+
+## Is this encryption?
+
+Only if you enable the passphrase option. Without a passphrase, the hidden data is in plaintext (after compression). With a passphrase, it is encrypted with AES-256-GCM. See [Security](/docs/security) for the full cryptography details.
+
+## Can anyone detect that I'm using steganography?
+
+- **Without the passphrase:** a casual reader will not notice. A motivated forensic analyst running chi-square or histogram analysis on an image, or counting zero-width character frequency in text, can detect that *something* is hidden. They still cannot read it without the passphrase.
+- **With the passphrase:** the content is unreadable, but the *presence* of a hidden payload is still detectable by the same methods.
+
+If your threat model includes resisting detection, this is the wrong tool.
+
+## Which zero-width characters should I select?
+
+The default three (U+200B, U+200C, U+200D) work in the most places. If you know your target channel strips one of them, select an alternative. The first three selected are used as `bit 0`, `bit 1`, and the end delimiter — the order matters.
+
+## Can I use this to watermark my photos?
+
+Yes, in a soft sense. Embed an author tag or a unique ID in the image. Anyone with the tool (or knowledge of the technique) can extract it, but a casual viewer will not see anything different.
+
+## Does the recipient need the tool?
+
+Yes, or at least the same encoding/decoding logic. If you are sending a stego text, the recipient needs to know:
+
+- That the text contains hidden data
+- Which three (or more) ZW characters to use, in what order
+- The passphrase (if any)
+
+The tool's UI exposes all of these as UI choices. If you are sending an image, the recipient needs the tool and the passphrase.
+
+## Why does my pasted text not work for decoding?
+
+Most likely a platform stripped the zero-width characters on the way to you. See [Limitations](/docs/limitations) for the list of known platforms.
+
+## Can I use StegnoHide over Tor / a VPN / Signal?
+
+StegnoHide does not handle transport — it only embeds and extracts. Use whatever tool you want for the actual sending. Tor, a VPN, or a secure messenger handles the transport.
+
+## Is there a mobile app?
+
+Not yet. The web app works in mobile browsers. A native iOS or Android app is on the roadmap.
+
+## How big can my secret be?
+
+- **Text mode:** bounded by the length of the cover. 1 KB of secret typically produces 8–10 KB of zero-width characters.
+- **Image mode:** `width × height × 3 × bitsPerChannel − 32` bits. A 1000×1000 image at 1 bpc holds about 375 KB.
+
+## What happens if I lose the passphrase?
+
+The message is unrecoverable. There is no recovery mechanism and no backdoor. This is by design.
+
+## Can I sign my messages?
+
+Not in the current version. The output is symmetric (passphrase = encrypt + decrypt). A signature scheme requires an asymmetric key pair and is a roadmap item.
