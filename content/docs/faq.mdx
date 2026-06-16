@@ -4,41 +4,76 @@ description: Frequently asked questions about StegnoHide.
 icon: CircleQuestionMark
 ---
 
-## Is StegnoHide free?
+# FAQ
+
+Answers to the questions people ask most often. If yours isn't here, open an issue on GitHub.
+
+<Callout type="info">
+**Quick rule of thumb:** StegnoHide hides a message inside a cover. It does not transmit the message, anonymize the sender, or replace a VPN/Tor. Use it for fun, demos, and watermarking — use other tools for transport and anonymity.
+</Callout>
+
+## Getting Started
+
+### Is StegnoHide free?
 
 Yes. The source is MIT-licensed and the hosted version is free to use.
 
-## Does my data ever leave my device?
+### Does my data ever leave my device?
 
-No. StegnoHide is 100% client-side. There is no upload step, no API call, and no analytics. You can verify this by running the app with the network tab open and the dev server's network panel empty after page load.
+No. StegnoHide is 100% client-side. There is no upload step, no API call, and no analytics. You can verify this by running the app with the network tab open — the dev server's network panel stays empty after the initial page load.
 
-## How is the secret actually hidden?
+### Is there a mobile app?
 
-- **Text mode:** the secret is compressed, optionally encrypted, then encoded as a sequence of zero-width Unicode characters (U+200B, U+200C, U+200D, and others) inserted into the cover text.
-- **Image mode:** the secret is compressed, optionally encrypted, then written into the least significant bits of the red, green, and blue channels of each pixel in the cover image. The output is always PNG.
+Not yet. The web app works in mobile browsers. A native iOS or Android app is on the roadmap.
+
+## How It Works
+
+### How is the secret actually hidden?
+
+- **Text mode** — the secret is compressed, optionally encrypted, then encoded as a sequence of zero-width Unicode characters (U+200B, U+200C, U+200D, and others) inserted into the cover text.
+- **Image mode** — the secret is compressed, optionally encrypted, then written into the least significant bits of the red, green, and blue channels of each pixel in the cover image. The output is always PNG.
 
 See [Text Steganography](/docs/guides/text-steganography) and [Image Steganography](/docs/guides/image-steganography) for the full algorithm.
 
-## Is this encryption?
+### Is this encryption?
 
 Only if you enable the passphrase option. Without a passphrase, the hidden data is in plaintext (after compression). With a passphrase, it is encrypted with AES-256-GCM. See [Security](/docs/security) for the full cryptography details.
 
-## Can anyone detect that I'm using steganography?
+### Which zero-width characters should I select?
 
-- **Without the passphrase:** a casual reader will not notice. A motivated forensic analyst running chi-square or histogram analysis on an image, or counting zero-width character frequency in text, can detect that *something* is hidden. They still cannot read it without the passphrase.
-- **With the passphrase:** the content is unreadable, but the *presence* of a hidden payload is still detectable by the same methods.
+The default three (U+200B, U+200C, U+200D) work in the most places. If you know your target channel strips one of them, pick an alternative. The first three selected are used as `bit 0`, `bit 1`, and the end delimiter — **the order matters**.
+
+### How big can my secret be?
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+<Card title="Text mode">
+  Bounded by the length of the cover. 1 KB of secret typically produces **8–10 KB** of zero-width characters.
+</Card>
+<Card title="Image mode">
+  `width × height × 3 × bitsPerChannel − 32` bits. A 1000×1000 image at 1 bpc holds about **375 KB**.
+</Card>
+</div>
+
+## Threat Model
+
+### Can anyone detect that I'm using steganography?
+
+- **Without the passphrase** — a casual reader will not notice. A motivated forensic analyst running chi-square or histogram analysis on an image, or counting zero-width character frequency in text, can detect that *something* is hidden. They still cannot read it without the passphrase.
+- **With the passphrase** — the content is unreadable, but the *presence* of a hidden payload is still detectable by the same methods.
 
 If your threat model includes resisting detection, this is the wrong tool.
 
-## Which zero-width characters should I select?
+### Can I use StegnoHide over Tor / a VPN / Signal?
 
-The default three (U+200B, U+200C, U+200D) work in the most places. If you know your target channel strips one of them, select an alternative. The first three selected are used as `bit 0`, `bit 1`, and the end delimiter — the order matters.
+StegnoHide does not handle transport — it only embeds and extracts. Use whatever tool you want for the actual sending. Tor, a VPN, or a secure messenger handles the transport.
 
-## Can I use this to watermark my photos?
+### What happens if I lose the passphrase?
 
-Yes, in a soft sense. Embed an author tag or a unique ID in the image. Anyone with the tool (or knowledge of the technique) can extract it, but a casual viewer will not see anything different.
+The message is **unrecoverable**. There is no recovery mechanism and no backdoor. This is by design.
 
-## Does the recipient need the tool?
+## Sharing
+
+### Does the recipient need the tool?
 
 Yes, or at least the same encoding/decoding logic. If you are sending a stego text, the recipient needs to know:
 
@@ -46,29 +81,36 @@ Yes, or at least the same encoding/decoding logic. If you are sending a stego te
 - Which three (or more) ZW characters to use, in what order
 - The passphrase (if any)
 
-The tool's UI exposes all of these as UI choices. If you are sending an image, the recipient needs the tool and the passphrase.
+If you are sending an image, the recipient needs the tool and the passphrase.
 
-## Why does my pasted text not work for decoding?
+### Can I use this to watermark my photos?
+
+Yes, in a soft sense. Embed an author tag or a unique ID in the image. Anyone with the tool (or knowledge of the technique) can extract it, but a casual viewer will not see anything different.
+
+### Why does my pasted text not work for decoding?
 
 Most likely a platform stripped the zero-width characters on the way to you. See [Limitations](/docs/limitations) for the list of known platforms.
 
-## Can I use StegnoHide over Tor / a VPN / Signal?
+## Roadmap
 
-StegnoHide does not handle transport — it only embeds and extracts. Use whatever tool you want for the actual sending. Tor, a VPN, or a secure messenger handles the transport.
-
-## Is there a mobile app?
-
-Not yet. The web app works in mobile browsers. A native iOS or Android app is on the roadmap.
-
-## How big can my secret be?
-
-- **Text mode:** bounded by the length of the cover. 1 KB of secret typically produces 8–10 KB of zero-width characters.
-- **Image mode:** `width × height × 3 × bitsPerChannel − 32` bits. A 1000×1000 image at 1 bpc holds about 375 KB.
-
-## What happens if I lose the passphrase?
-
-The message is unrecoverable. There is no recovery mechanism and no backdoor. This is by design.
-
-## Can I sign my messages?
+### Can I sign my messages?
 
 Not in the current version. The output is symmetric (passphrase = encrypt + decrypt). A signature scheme requires an asymmetric key pair and is a roadmap item.
+
+## Common Errors
+
+<Accordions type="multiple">
+  <Accordion title='"No hidden message found" on decode'>
+    The decoder could not find a delimiter in the input. Common causes:
+
+    - The text was pasted from a platform that stripped the ZW characters.
+    - The character set on the decoder side does not match the encoder side. Make sure the same three or more ZW characters are selected in the same order.
+    - The image was re-encoded by a lossy platform after encoding. The original LSBs are gone.
+  </Accordion>
+  <Accordion title='"Failed to decrypt" on decode'>
+    The passphrase is wrong, or the encrypted bytes are corrupted.
+  </Accordion>
+  <Accordion title='"Data too large" in image mode'>
+    Either use a larger image, switch from 1 bpc to 2 bpc (doubles capacity at the cost of visual quality), make the secret shorter, or enable the passphrase option (which adds a fixed 28-byte overhead for the salt and IV).
+  </Accordion>
+</Accordions>

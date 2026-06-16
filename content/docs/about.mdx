@@ -4,28 +4,66 @@ description: What StegnoHide is and why it exists.
 icon: Info
 ---
 
-StegnoHide is a small, focused web app for hiding secret messages inside ordinary-looking cover text or inside a PNG image. It was built to be:
+# About StegnoHide
 
-- **Client-side only.** No server, no upload step, no telemetry. Your cover, your secret, and your passphrase never leave your device.
-- **Standards-based.** The cryptography is Web Crypto. The compression is zlib. The text encoding uses Unicode. There is no proprietary format.
-- **Auditable.** The full source is small enough to read in an afternoon. There are no minified blobs, no dynamic imports from CDNs, and no `eval`.
-- **Quiet.** The output looks like the cover. The cover looks like the cover. Nothing visual or structural is changed that would visibly betray the presence of a hidden message.
+StegnoHide is a small, focused web app for hiding secret messages inside ordinary-looking cover text or inside a PNG image.
+
+## Design Principles
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<Card icon={<IconShieldCheck className="size-5" weight="duotone" />} title="Client-side only">
+  No server, no upload step, no telemetry. Your cover, your secret, and your passphrase never leave your device.
+</Card>
+<Card icon={<IconBook className="size-5" weight="duotone" />} title="Standards-based">
+  The cryptography is Web Crypto. The compression is zlib. The text encoding uses Unicode. There is no proprietary format.
+</Card>
+<Card icon={<IconCode className="size-5" weight="duotone" />} title="Auditable">
+  The full source is small enough to read in an afternoon. There are no minified blobs, no dynamic imports from CDNs, and no `eval`.
+</Card>
+<Card icon={<IconEyeOff className="size-5" weight="duotone" />} title="Quiet">
+  The output looks like the cover. The cover looks like the cover. Nothing visual or structural is changed that would visibly betray the presence of a hidden message.
+</Card>
+</div>
 
 ## Non-Goals
 
-- **Not a secure messenger.** StegnoHide does not transmit messages. It only embeds and extracts them.
-- **Not a substitute for encryption.** Steganography hides the *existence* of a message. Use the passphrase option (AES-256-GCM) to also hide the *content*.
-- **Not resistant to platform-level stripping.** Most chat apps, social networks, and rich-text editors will mangle zero-width characters and re-encode images. See [Limitations](/docs/limitations) before relying on this for a real exchange.
-- **Not an anonymity tool.** Hiding a message in a cover does not anonymize you. Use Tor, a VPN, or whatever else you need for transport-layer anonymity.
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<Card title="Not a secure messenger">
+  StegnoHide does not transmit messages. It only embeds and extracts them.
+</Card>
+<Card title="Not a substitute for encryption">
+  Steganography hides the *existence* of a message. Use the passphrase option (AES-256-GCM) to also hide the *content*.
+</Card>
+<Card title="Not resistant to platform-level stripping">
+  Most chat apps, social networks, and rich-text editors will mangle zero-width characters and re-encode images. See [Limitations](/docs/limitations) before relying on this for a real exchange.
+</Card>
+<Card title="Not an anonymity tool">
+  Hiding a message in a cover does not anonymize you. Use Tor, a VPN, or whatever else you need for transport-layer anonymity.
+</Card>
+</div>
 
 ## When To Use It
 
-- Fun notes that look like ordinary text to a casual reader.
-- Watermarking a draft by embedding an author tag in a copy you share.
-- Demonstrating steganography in a class or talk.
-- Sending a small payload through a channel where stego survives and the recipient has the tool or instructions to extract it.
+<Accordions type="multiple">
+  <Accordion title="Fun notes that look like ordinary text">
+    A casual reader sees only the cover. A motivated analyst running frequency analysis on the ZW characters might detect that *something* is hidden, but the content is unreadable without the passphrase.
+  </Accordion>
+  <Accordion title="Watermarking a draft">
+    Embed an author tag in a copy you share. The recipient (or anyone with the tool) can extract it, but a casual viewer will not see anything different.
+  </Accordion>
+  <Accordion title="Demos and teaching">
+    Demonstrate steganography in a class or talk. The full source is small enough to walk through in one session.
+  </Accordion>
+  <Accordion title="Small payloads over a preserving channel">
+    Send a small message through a channel where stego survives and the recipient has the tool (or instructions) to extract it.
+  </Accordion>
+</Accordions>
 
 ## When Not To Use It
+
+<Callout type="warn">
+The tool assumes the channel **preserves** the carrier. If you have not verified the round trip, do not rely on it.
+</Callout>
 
 - The channel is lossy or normalizing and you have not verified the round-trip works.
 - The threat model requires strong deniability. ZW-character frequency analysis is a well-known detection method.

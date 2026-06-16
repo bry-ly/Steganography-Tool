@@ -4,46 +4,57 @@ description: Where StegnoHide breaks — platform stripping, lossy sources, capa
 icon: CircleAlert
 ---
 
+# Limitations
+
 StegnoHide has several real-world limitations. This page lists the ones you are most likely to hit.
 
-## Text Mode: Zero-Width Stripping
-
-Many platforms normalize, strip, or refuse to render zero-width Unicode characters. **Always test the round-trip in the actual channel you intend to use** before relying on StegnoHide for a real exchange.
-
-Platforms known to strip zero-width characters include:
-
-- WhatsApp
-- Telegram (most zero-width chars are stripped; a small number survive inconsistently)
-- Discord
-- Slack
-- Microsoft Teams
-- Twitter/X DMs
-- Instagram DMs
-- Facebook Messenger
-- Google Docs (strips on paste, and silently)
-- Microsoft Word with autocorrect on
-- Most email clients when sending HTML mail (ZW chars often survive in plain-text)
-
-Platforms that tend to preserve zero-width characters include:
-
-- Raw `.txt` files emailed as attachments
-- GitHub (gists, issues, comments, code blocks)
-- Pastebin-style services
-- Code editors and IDEs
-- Markdown files in static site generators
-- `<pre>` and `<code>` blocks in HTML
-
 <Callout type="warn">
-**Always send a test round-trip first.** Encode → send through the actual channel → decode on the other side. If the decoder reports "No hidden message found", the channel stripped the chars.
+**Always test the round-trip in the actual channel you intend to use** before relying on StegnoHide for a real exchange. Platforms change their handling of Unicode and image encoding without notice.
 </Callout>
 
-## Text Mode: Capacity
+## Text Mode
 
-Every byte of the secret requires **8 zero-width characters** (one per bit), plus 1 delimiter and an envelope header. Compression helps, but a 1 KB secret typically produces 8–10 KB of zero-width characters inserted into the cover. Pick a cover text that is long enough.
+### Zero-Width Stripping
+
+Many platforms normalize, strip, or refuse to render zero-width Unicode characters. The behavior is inconsistent and changes over time.
+
+<Accordions type="multiple">
+  <Accordion title="Platforms that strip ZW characters">
+    - WhatsApp
+    - Telegram (most zero-width chars are stripped; a small number survive inconsistently)
+    - Discord
+    - Slack
+    - Microsoft Teams
+    - Twitter/X DMs
+    - Instagram DMs
+    - Facebook Messenger
+    - Google Docs (strips on paste, and silently)
+    - Microsoft Word with autocorrect on
+    - Most email clients when sending HTML mail (ZW chars often survive in plain-text)
+  </Accordion>
+  <Accordion title="Platforms that preserve ZW characters">
+    - Raw `.txt` files emailed as attachments
+    - GitHub (gists, issues, comments, code blocks)
+    - Pastebin-style services
+    - Code editors and IDEs
+    - Markdown files in static site generators
+    - `<pre>` and `<code>` blocks in HTML
+  </Accordion>
+</Accordions>
+
+<Callout type="warn">
+**Send a test round-trip first.** Encode → send through the actual channel → decode on the other side. If the decoder reports "No hidden message found", the channel stripped the chars.
+</Callout>
+
+### Capacity
+
+Every byte of the secret requires **8 zero-width characters** (one per bit), plus 1 delimiter and an envelope header. Compression helps, but a 1 KB secret typically produces **8–10 KB** of zero-width characters inserted into the cover. Pick a cover text that is long enough.
 
 The default insertion point is the **first whitespace** in the cover. If your cover is short, the stego sequence is the majority of the resulting text, which can become visually detectable (some renderers and copy-paste behaviors will treat runs of zero-width chars as a single "blank" and collapse them).
 
-## Image Mode: Lossy Re-Encoding
+## Image Mode
+
+### Lossy Re-Encoding
 
 Most platforms that accept images **re-encode them** on upload, which destroys LSBs. The list overlaps heavily with the text-mode stripping list:
 
@@ -53,21 +64,36 @@ Most platforms that accept images **re-encode them** on upload, which destroys L
 - Email — preserves the original file *as an attachment* but inlined images are often re-encoded
 - Most forums, blogs, and image hosts
 
-Use a lossless file transfer (email attachment, cloud drive, S3, IPFS) if the channel matters.
+<Callout type="info">
+Use a **lossless file transfer** (email attachment, cloud drive, S3, IPFS) if the channel matters.
+</Callout>
 
-## Image Mode: Source Format
+### Source Format
 
 The tool can accept PNG, JPEG, WebP, HEIC, and AVIF as the source cover. **PNG is the only lossless option.** JPEG/WebP/HEIC/AVIF are decoded through the browser's image decoder, which means their LSBs are already noisy from the original compression. Encoding still works, but the source's own noise is mixed in with the steganographic noise. The tool will warn you when you upload a lossy source.
 
 The output is **always PNG**, regardless of the source format.
 
-## Image Mode: Capacity
+### Capacity
 
-Capacity is `width × height × 3 × bitsPerChannel − 32` bits. A 1000×1000 image at 1 bpc holds about **375 KB**. At 2 bpc, about **750 KB** — but with visible quality loss in solid-color regions.
+Capacity is `width × height × 3 × bitsPerChannel − 32` bits.
+
+<Tabs items={["1 bpc (lossless)", "2 bpc (more capacity)"]}>
+<Tab>
+- A 1000×1000 image holds about **375 KB**
+- No visible quality loss
+- Recommended default
+</Tab>
+<Tab>
+- A 1000×1000 image holds about **750 KB**
+- Visible quality loss in solid-color regions
+- Use only if you need the extra capacity
+</Tab>
+</Tabs>
 
 For a 5 KB message, a 200×200 image is plenty at 1 bpc. For a 100 KB message, use at least a 600×600 image.
 
-## Image Mode: Detection
+### Detection
 
 LSB steganography is detectable by anyone running the right statistical analysis. The tool is not designed to resist steganalysis. The passphrase option prevents the *content* from being read, but it does not hide the *fact* that the image was modified.
 
@@ -77,9 +103,13 @@ Common detection methods:
 - **Histogram analysis** for unnatural distributions
 - **Comparison against the original** (if available) — trivial diff
 
+<Callout type="error">
 If your threat model includes steganalysis, StegnoHide is the wrong tool.
+</Callout>
 
-## Capacity Error: "Data too large"
+## Errors and Fixes
+
+### Capacity Error: "Data too large"
 
 If you see this in image mode, either:
 
@@ -88,7 +118,7 @@ If you see this in image mode, either:
 - Make the secret shorter
 - Enable the passphrase option, which adds a fixed 28-byte overhead for the salt and IV
 
-## Decoding Error: "No hidden message found"
+### Decoding Error: "No hidden message found"
 
 The decoder could not find a delimiter in the input. Common causes:
 
@@ -96,6 +126,6 @@ The decoder could not find a delimiter in the input. Common causes:
 - The character set on the decoder side does not match the encoder side. Make sure the same three or more ZW characters are selected in the same order.
 - The image was re-encoded by a lossy platform after encoding. The original LSBs are gone.
 
-## Decoding Error: "Failed to decrypt"
+### Decoding Error: "Failed to decrypt"
 
 The passphrase is wrong, or the encrypted bytes are corrupted.
