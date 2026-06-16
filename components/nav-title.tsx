@@ -15,7 +15,7 @@ export function NavTitle(props: ComponentProps<"a">) {
         className="rounded"
         priority
       />
-      <span>Stegnohide</span>
+      <span>StegnoHide</span>
     </Link>
   );
 }
