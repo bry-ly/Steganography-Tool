@@ -1,6 +1,6 @@
 {
   "title": "Changelog",
   "icon": "History",
-  "defaultOpen": false,
+  "defaultOpen": true,
   "pages": ["index", "..."]
 }
