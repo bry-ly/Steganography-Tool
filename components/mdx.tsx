@@ -6,6 +6,8 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Callout } from "fumadocs-ui/components/callout";
 import { File, Folder, Files } from "fumadocs-ui/components/files";
 import { Card } from "fumadocs-ui/components/card";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { TypeTable } from "fumadocs-ui/components/type-table";
 
 function IconTextAa(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -55,6 +57,38 @@ function IconGlobe(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function IconShieldCheck(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path d="M208 40H48a16 16 0 0 0-16 16v58.78c0 89.61 75.82 119.34 91 124.39a15.53 15.53 0 0 0 10 0c15.2-5.05 91-34.78 91-124.39V56a16 16 0 0 0-16-16Zm-50.34 74.34-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L96 153.37l50.34-50.35a8 8 0 0 1 11.32 11.32Z" />
+    </svg>
+  );
+}
+
+function IconBook(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path d="M224 48h-64a40 40 0 0 0-32 16 40 40 0 0 0-32-16H32a8 8 0 0 0-8 8v144a8 8 0 0 0 8 8h64a24 24 0 0 1 24 24 8 8 0 0 0 16 0 24 24 0 0 1 24-24h64a8 8 0 0 0 8-8V56a8 8 0 0 0-8-8ZM96 192H40V64h56a24 24 0 0 1 24 24v112a39.81 39.81 0 0 0-24-8Zm120 0h-56a39.81 39.81 0 0 0-24 8V88a24 24 0 0 1 24-24h56Z" />
+    </svg>
+  );
+}
+
+function IconCode(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path d="M69.12 132.23 40 162.34l29.12 30.11a8 8 0 1 1-11.7 10.91l-35.07-36.27a8 8 0 0 1 0-11.32L57.42 119.5a8 8 0 0 1 11.7 10.91Zm162.68-1.18 35.07 36.27a8 8 0 0 1 0 11.32l-35.07 36.27a8 8 0 0 1-11.7-10.91L249.05 162.34l-29.12-30.11a8 8 0 1 1 11.7-10.91Zm-64.84 89.18a8 8 0 0 1-10.6-4.18L116.18 116.2a8 8 0 0 1 14.78-6.43l40.18 99.86a8 8 0 0 1-4.18 10.6Z" />
+    </svg>
+  );
+}
+
+function IconEyeOff(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path d="M53.92 34.62a8 8 0 1 0-11.84 10.76l19.24 21.17C41.5 77.43 26.31 94.18 13.09 116.18a8 8 0 0 0 .61 9.42C34.77 154.2 70.2 184 128 184a130 130 0 0 0 39-6l25.07 27.58a8 8 0 1 0 11.84-10.76ZM128 168c-29.83 0-54-19-66.83-37.26 7.69-12 19.49-26.93 35.16-37.26l12.31 13.5a32 32 0 0 0 46.37 46.37l-1.43-1.57c-.13 1.06-.31 2.1-.51 3.13A32 32 0 0 1 128 168Z" />
+    </svg>
+  );
+}
+
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
@@ -72,12 +106,19 @@ export function getMDXComponents(components?: MDXComponents) {
     Folder,
     File,
     Card,
+    Accordion,
+    Accordions,
+    TypeTable,
     IconTextAa,
     IconImage,
     IconLock,
     IconPackage,
     IconMoon,
     IconGlobe,
+    IconShieldCheck,
+    IconBook,
+    IconCode,
+    IconEyeOff,
     ...components,
   } satisfies MDXComponents;
 }
