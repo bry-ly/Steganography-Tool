@@ -11,7 +11,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://stegnohide.example.com"),
+  metadataBase: new URL("https://steganohide-tool.vercel.app"),
   title: {
     default: "StegnoHide — Hide Secret Messages in Text or Images",
     template: "%s · StegnoHide",
@@ -23,19 +23,16 @@ export const metadata: Metadata = {
   creator: "StegnoHide contributors",
   publisher: "StegnoHide",
   robots: { index: true, follow: true },
-  icons: {
-    icon: "/logo/Logo.png",
-  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://stegnohide.example.com",
+    url: "https://steganohide-tool.vercel.app",
     siteName: "StegnoHide",
     title: "StegnoHide — Hide Secret Messages in Text or Images",
     description: "Client-side steganography tool. AES-256-GCM-encrypted messages hidden in plain text or PNG images. No server.",
     images: [
       {
-        url: "/og.png",
+        url: "/icon.png",
         width: 1200,
         height: 630,
         alt: "StegnoHide",
@@ -46,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "StegnoHide — Hide Secret Messages in Text or Images",
     description: "Client-side steganography tool. AES-256-GCM-encrypted messages hidden in plain text or PNG images. No server.",
-    images: ["/og.png"],
+    images: ["/icon.png"],
   },
 };
 
