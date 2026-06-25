@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { PassphraseInput } from "@/components/pass-phrase-input";
 import { ZWCharSelector } from "@/components/zw-char-selector";
-import { encodeMessage } from "@/lib/steganography";
+import { encodeMessage, getTextCapacity } from "@/lib/steganography";
+import { FileUploadButton } from "@/components/ui/file-upload-button";
 import { copyToClipboard, downloadTextFile, readFileAsText } from "@/lib/file";
-import { CopyIcon, DownloadSimpleIcon, LockKeyIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { CopyIcon, DownloadSimpleIcon, LockKeyIcon } from "@phosphor-icons/react";
 
 interface TextEncodeTabProps {
   selectedChars: string[];
@@ -24,8 +25,8 @@ export function TextEncodeTab({ selectedChars, onSelectedCharsChange }: TextEnco
   const [stegoOut, setStegoOut] = useState("");
   const [error, setError] = useState("");
   const [passphrase, setPassphrase] = useState("");
+  const [iterations, setIterations] = useState(100_000);
   const [stats, setStats] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleEncode() {
     setError("");
@@ -44,13 +45,10 @@ export function TextEncodeTab({ selectedChars, onSelectedCharsChange }: TextEnco
     }
   }
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) setCoverText(await readFileAsText(file));
-    e.target.value = "";
-  }
-
   const wordCount = coverText.trim() ? coverText.trim().split(/\s+/).length : 0;
+  const capacityBytes = getTextCapacity(coverText, selectedChars);
+  const secretBytes = secret ? new TextEncoder().encode(secret).length : 0;
+  const willOverflow = secretBytes > 0 && capacityBytes > 0 && secretBytes > capacityBytes;
 
   return (
     <div className="space-y-4">
@@ -59,10 +57,14 @@ export function TextEncodeTab({ selectedChars, onSelectedCharsChange }: TextEnco
           <Label htmlFor="cover-text">Cover Text</Label>
           <div className="flex items-center gap-2">
             {wordCount > 0 && <Badge variant="secondary">{wordCount} words</Badge>}
-            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => fileRef.current?.click()}>
-              <UploadSimpleIcon size={12} /> Upload .txt
-            </Button>
-            <input ref={fileRef} type="file" accept=".txt" className="hidden" onChange={handleFile} />
+            {coverText.length > 0 && <Badge variant={willOverflow ? "destructive" : "secondary"}>{willOverflow ? "Too large" : `~${capacityBytes} B`}</Badge>}
+            <FileUploadButton
+              accept=".txt"
+              label="Upload .txt"
+              onFile={async (file) => {
+                setCoverText(await readFileAsText(file));
+              }}
+            />
           </div>
         </div>
         <Textarea id="cover-text" placeholder="Paste your cover text here…" rows={5} value={coverText} onChange={(e) => setCoverText(e.target.value)} />
@@ -73,7 +75,16 @@ export function TextEncodeTab({ selectedChars, onSelectedCharsChange }: TextEnco
         <Textarea id="secret" placeholder="Type the message to hide…" rows={3} value={secret} onChange={(e) => setSecret(e.target.value)} />
       </div>
 
-      <PassphraseInput id="encode-passphrase" label="Passphrase (optional)" value={passphrase} onChange={setPassphrase} placeholder="Encrypt the secret with a passphrase" />
+      <PassphraseInput
+        id="encode-passphrase"
+        label="Passphrase (optional)"
+        value={passphrase}
+        onChange={setPassphrase}
+        placeholder="Encrypt the secret with a passphrase"
+        iterations={iterations}
+        onIterationsChange={setIterations}
+        showSecurityLevel
+      />
 
       <ZWCharSelector selectedChars={selectedChars} onChange={onSelectedCharsChange} />
 
@@ -92,10 +103,26 @@ export function TextEncodeTab({ selectedChars, onSelectedCharsChange }: TextEnco
           <div className="flex items-center justify-between">
             <Label>Stego Text Output</Label>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => copyToClipboard(stegoOut, "Copied to clipboard", "Failed to copy")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={async () => {
+                  const r = await copyToClipboard(stegoOut);
+                  toast[r.ok ? "success" : "error"](r.message);
+                }}
+              >
                 <CopyIcon size={12} /> Copy
               </Button>
-              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => { downloadTextFile(stegoOut, "stego-output.txt"); toast.success("File downloaded"); }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={() => {
+                  downloadTextFile(stegoOut, "stego-output.txt");
+                  toast.success("File downloaded");
+                }}
+              >
                 <DownloadSimpleIcon size={12} /> Download
               </Button>
             </div>
