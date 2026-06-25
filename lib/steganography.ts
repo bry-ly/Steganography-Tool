@@ -1,6 +1,8 @@
 import { encryptMessage, decryptMessage, EncryptionError } from "@/lib/encryption";
 import pako from "pako";
 
+export const ENVELOPE_VERSION = 2;
+
 export class SteganographyError extends Error {
   name = "SteganographyError";
 }
@@ -25,6 +27,17 @@ export const ZW_CHARS = [
 ] as const;
 
 export const DEFAULT_SELECTED = ["\u200B", "\u200C", "\u200D"];
+
+const TEXT_ENVELOPE_OVERHEAD_BYTES = 5;
+
+export function getTextCapacity(coverText: string, chars = DEFAULT_SELECTED): number {
+  if (chars.length < 3) return 0;
+  const zwSlots = coverText.length;
+  const usableBits = zwSlots - 1;
+  if (usableBits <= 0) return 0;
+  const usableBytes = Math.floor(usableBits / 8);
+  return Math.max(0, usableBytes - TEXT_ENVELOPE_OVERHEAD_BYTES);
+}
 
 function textToUint8(text: string): Uint8Array {
   return new TextEncoder().encode(text);
@@ -75,23 +88,43 @@ function unpackSecret(packed: Uint8Array): Uint8Array {
   return data;
 }
 
+export type EncodeOptions = {
+  iterations?: number;
+};
+
 export async function prepareSecret(
   secret: string | Uint8Array,
   passphrase?: string,
+  options: EncodeOptions = {},
 ): Promise<Uint8Array> {
   const bytes = typeof secret === "string" ? textToUint8(secret) : secret;
   const packed = packSecret(bytes);
+  let inner: Uint8Array;
   if (passphrase) {
-    return encryptMessage(packed, passphrase);
+    inner = await encryptMessage(packed, passphrase, { iterations: options.iterations });
+  } else {
+    inner = packed;
   }
-  return packed;
+  const result = new Uint8Array(1 + inner.length);
+  result[0] = ENVELOPE_VERSION;
+  result.set(inner, 1);
+  return result;
 }
 
 export async function extractSecret(
   data: Uint8Array,
   passphrase?: string,
 ): Promise<string> {
-  let bytes = data;
+  if (data.length < 1) throw new DecodeError("No hidden message found.");
+  const version = data[0];
+  let bytes: Uint8Array;
+  if (version === ENVELOPE_VERSION) {
+    bytes = data.slice(1);
+  } else if (version === 1) {
+    bytes = data;
+  } else {
+    throw new DecodeError(`Unsupported envelope version: ${version}`);
+  }
   if (passphrase) {
     try {
       bytes = await decryptMessage(bytes, passphrase);
@@ -109,13 +142,14 @@ export async function encodeMessage(
   secret: string | Uint8Array,
   chars = DEFAULT_SELECTED,
   passphrase?: string,
+  options: EncodeOptions = {},
 ): Promise<string> {
   if (!coverText.trim()) throw new EncodeError("Cover text cannot be empty.");
   if (!secret || (typeof secret === "string" && !secret)) throw new EncodeError("Secret message cannot be empty.");
   if (chars.length < 3) throw new EncodeError("At least 3 zero-width characters must be selected.");
 
   const [ZW0, ZW1, ZWD] = chars;
-  const payload = await prepareSecret(secret, passphrase);
+  const payload = await prepareSecret(secret, passphrase, options);
   const bits = toBits(payload);
 
   let hidden = "";
