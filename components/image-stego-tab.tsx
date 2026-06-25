@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PassphraseInput } from "@/components/pass-phrase-input";
-import {
-  encodeIntoImage,
-  decodeFromImage,
-  imageDataFromFile,
-  imageDataToPngBlob,
-  getImageCapacity,
-} from "@/lib/image-steganography";
+import { encodeIntoImage, decodeFromImage, imageDataFromFile, imageDataToPngBlob, getImageCapacity } from "@/lib/image-steganography";
 import { prepareSecret, extractSecret } from "@/lib/steganography";
 import { copyToClipboard, downloadBlob, withExtensionStripped } from "@/lib/file";
 import { isLikelyLossySource } from "@/lib/image-source";
@@ -28,6 +22,7 @@ export function ImageStegoTab() {
   const [bitsPerChannel, setBitsPerChannel] = useState<1 | 2>(1);
   const [secret, setSecret] = useState("");
   const [passphrase, setPassphrase] = useState("");
+  const [iterations, setIterations] = useState(100_000);
   const [encodeError, setEncodeError] = useState("");
   const [decodeResult, setDecodeResult] = useState("");
   const [decodeError, setDecodeError] = useState("");
@@ -69,32 +64,46 @@ export function ImageStegoTab() {
   }
 
   async function handleEncode() {
-    if (!file) { setEncodeError("Select an image first."); return; }
-    if (!secret) { setEncodeError("Enter a secret message."); return; }
+    if (!file) {
+      setEncodeError("Select an image first.");
+      return;
+    }
+    if (!secret) {
+      setEncodeError("Enter a secret message.");
+      return;
+    }
     setEncodeError("");
     setDecodeResult("");
 
     try {
       const imageData = await imageDataFromFile(file);
       const { maxBytes } = getImageCapacity(imageData.width, imageData.height, bitsPerChannel);
-      const prepared = await prepareSecret(secret, passphrase || undefined);
+      const prepared = await prepareSecret(secret, passphrase || undefined, passphrase ? { iterations } : {});
       if (prepared.length > maxBytes) {
-        setEncodeError(
-          `Secret is ${prepared.length} bytes but image holds ${maxBytes} bytes at ${bitsPerChannel} bpc. Try a larger image, 2 bpc, or a shorter message.`,
-        );
+        setEncodeError(`Secret is ${prepared.length} bytes but image holds ${maxBytes} bytes at ${bitsPerChannel} bpc. Try a larger image, 2 bpc, or a shorter message.`);
         return;
       }
       const encoded = encodeIntoImage(imageData, prepared, bitsPerChannel);
+      const roundTripBytes = decodeFromImage(encoded, bitsPerChannel);
+      const roundTripSecret = await extractSecret(roundTripBytes, passphrase || undefined);
+      const verified = roundTripSecret === secret;
       const blob = await imageDataToPngBlob(encoded);
       downloadBlob(blob, `${withExtensionStripped(file.name)}-stego.png`);
-      toast.success("Image encoded and downloaded");
+      if (verified) {
+        toast.success(`Image encoded and downloaded (self-test passed)`);
+      } else {
+        toast.error("Round-trip verification failed");
+      }
     } catch (e) {
       setEncodeError((e as Error).message);
     }
   }
 
   async function handleDecode() {
-    if (!file) { setDecodeError("Select an image first."); return; }
+    if (!file) {
+      setDecodeError("Select an image first.");
+      return;
+    }
     setDecodeError("");
     setDecodeResult("");
     setEncodeError("");
@@ -119,13 +128,21 @@ export function ImageStegoTab() {
         <div className="flex gap-1 rounded-lg bg-muted p-1 w-fit">
           <button
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${mode === "encode" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => { setMode("encode"); setEncodeError(""); setDecodeError(""); setDecodeResult(""); }}
+            onClick={() => {
+              setMode("encode");
+              setEncodeError("");
+              setDecodeError("");
+              setDecodeResult("");
+            }}
           >
             Encode into Image
           </button>
           <button
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${mode === "decode" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => { setMode("decode"); handleRemove(); }}
+            onClick={() => {
+              setMode("decode");
+              handleRemove();
+            }}
           >
             Decode from Image
           </button>
@@ -157,13 +174,14 @@ export function ImageStegoTab() {
             <p className="text-xs text-muted-foreground">
               {file.name} ({(file.size / 1024).toFixed(1)} KB)
               {mode === "encode" && dims && (
-                <> — capacity: ~{capacity} bytes (at {bitsPerChannel} bpc)</>
+                <>
+                  {" "}
+                  — capacity: ~{capacity} bytes (at {bitsPerChannel} bpc)
+                </>
               )}
             </p>
             {lossySource && mode === "encode" && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                Source is a lossy format (JPEG/WebP/HEIC/AVIF). LSBs are already noisy, but encoding still works — output is always PNG.
-              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">Source is a lossy format (JPEG/WebP/HEIC/AVIF). LSBs are already noisy, but encoding still works — output is always PNG.</p>
             )}
           </div>
         )}
@@ -190,7 +208,16 @@ export function ImageStegoTab() {
             <Textarea id="image-secret" placeholder="Type the message to hide in the image…" rows={3} value={secret} onChange={(e) => setSecret(e.target.value)} />
           </div>
 
-          <PassphraseInput id="image-passphrase" label="Passphrase (optional)" value={passphrase} onChange={setPassphrase} placeholder="Encrypt with a passphrase" />
+          <PassphraseInput
+            id="image-passphrase"
+            label="Passphrase (optional)"
+            value={passphrase}
+            onChange={setPassphrase}
+            placeholder="Encrypt with a passphrase"
+            iterations={iterations}
+            onIterationsChange={setIterations}
+            showSecurityLevel
+          />
 
           {encodeError && <p className="text-sm text-destructive">{encodeError}</p>}
 
@@ -217,10 +244,15 @@ export function ImageStegoTab() {
                   <Label>Extracted Message</Label>
                   <Badge variant="secondary">Found</Badge>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={async () => {
-                  const r = await copyToClipboard(decodeResult);
-                  toast[r.ok ? "success" : "error"](r.message);
-                }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={async () => {
+                    const r = await copyToClipboard(decodeResult);
+                    toast[r.ok ? "success" : "error"](r.message);
+                  }}
+                >
                   <CopyIcon size={12} /> Copy
                 </Button>
               </div>
