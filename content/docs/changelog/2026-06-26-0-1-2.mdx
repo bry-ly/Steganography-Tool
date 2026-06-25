@@ -1,0 +1,21 @@
+---
+title: "0.1.2"
+description: "Release notes for StegnoHide 0.1.2 (2026-06-26)."
+icon: Package
+---
+# 0.1.2 (2026-06-26)
+
+### Added
+- KDF strength selector for passphrase-protected text and image encoding, with PBKDF2 presets from 100k to 1M iterations.
+- Versioned encryption and steganography envelopes that record payload metadata, including PBKDF2 iteration counts for encrypted messages.
+- Text cover capacity estimates and overflow warnings before encoding.
+- Reusable `FileUploadButton` for hidden file inputs.
+- Image encoding round-trip self-test before reporting a successful download.
+
+### Changed
+- Use the shared `Logo` component for the navigation title and the website favicon source via Next.js `app/icon.png` convention.
+- Update site metadata from placeholder URLs to the deployed Vercel URL and reuse `/icon.png` for social preview images.
+- Correct placeholder GitHub URLs in `getting-started`, `security`, and `changelog` docs pages to the real repository (`bry-ly/steganography-tool`).
+
+### Fixed
+- Restored text cover `.txt` uploads by replacing the missing inline upload icon/ref wiring with the shared upload button.
